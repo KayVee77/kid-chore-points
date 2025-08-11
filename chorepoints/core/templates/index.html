@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+  <style>
+    .mode-grid {display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1.5rem; margin-top:2rem;}
+    .mode-card {border:3px solid #222; padding:1.5rem 1rem; border-radius:1rem; background:linear-gradient(135deg,#fff,#f5f5f5); text-align:center; cursor:pointer; position:relative; transition:.25s; box-shadow:0 4px 10px -2px rgba(0,0,0,.15);}    
+    .mode-card:hover {transform:translateY(-4px); box-shadow:0 8px 18px -4px rgba(0,0,0,.25);} 
+    .mode-card .emoji {font-size:3rem; display:block; margin-bottom:.5rem;}
+  </style>
+  <h1>🎯 Taškų Nuotykis</h1>
+  <p style="max-width:600px;">Pasirink kas esi šiandien – tėtis/mama ar vaikas. Surink taškus už darbus ir išleisk juos smagiems apdovanojimams!</p>
+  <div class="mode-grid">
+    <a class="mode-card" href="{% url 'kid_login' %}" style="text-decoration:none; color:inherit;">
+      <span class="emoji">🧒</span>
+      <h2 style="margin:.25rem 0 .5rem 0;">Aš esu vaikas</h2>
+      <div>Prisijunk su PIN ir rink taškus!</div>
+    </a>
+    <a class="mode-card" href="/admin/" style="text-decoration:none; color:inherit;">
+      <span class="emoji">🧑‍💼</span>
+      <h2 style="margin:.25rem 0 .5rem 0;">Esu tėtis / mama</h2>
+      <div>Tvarkyk darbus, apdovanojimus ir patvirtink.</div>
+    </a>
+  </div>
+{% endblock %}

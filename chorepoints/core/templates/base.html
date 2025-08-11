@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="lt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Taškų Nuotykis</title>
+    <style>
+      body { font-family: system-ui, sans-serif; margin: 2rem; }
+      .btn { padding: .5rem 1rem; border: 1px solid #111; background: #f3f3f3; cursor: pointer; }
+      .btn[disabled] { opacity: .5; cursor: not-allowed; }
+      .card { border:1px solid #ddd; padding:1rem; margin:.5rem 0; border-radius:.5rem; }
+      .row { display:flex; gap:1rem; flex-wrap:wrap; }
+      .grow { flex:1 1 300px; }
+      .flash { padding:.5rem 1rem; margin:.5rem 0; border-left: 4px solid #333; background:#fafafa; }
+    </style>
+  </head>
+  <body>
+    {% for msg in messages %}
+      <div class="flash">{{ msg }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+  </body>
+</html>

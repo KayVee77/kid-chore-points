@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block content %}
+  <style>
+    .points-badge {background:#ffd54f; display:inline-block; padding:.25rem .75rem; border-radius:2rem; font-weight:600; box-shadow:0 2px 4px rgba(0,0,0,.2);}
+    .avatar {font-size:2.5rem; line-height:1; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));}
+    .cards-grid {display:grid; gap:.75rem; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));}
+    .card {position:relative; overflow:hidden;}
+    .card:before {content:""; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,0)); pointer-events:none;}
+    .chore-card {border-left:6px solid #4caf50;}
+    .reward-card {border-left:6px solid #1976d2;}
+    .pending-section .card {border-left:6px solid #ff9800;}
+    .small {font-size:.8rem; opacity:.75;}
+    .icon {margin-right:.25rem;}
+    .btn.chore {background:#e8f5e9;}
+    .btn.reward {background:#e3f2fd;}
+  .progress-outer {background:#eee; height:14px; border-radius:8px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.2);}
+  .progress-fill {background:linear-gradient(90deg,#42a5f5,#66bb6a); height:100%; width:calc(var(--p,0) * 1%); transition:width .6s;}
+  </style>
+  <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+    <div class="avatar">
+      {% if kid.photo %}
+        <img src="{{ kid.photo.url }}" alt="{{ kid.name }}" style="width:72px; height:72px; object-fit:cover; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,.25);" />
+      {% elif kid.avatar_emoji %}
+        {{ kid.avatar_emoji }}
+      {% else %}
+        <span style="background:#1976d2; color:#fff; width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem;">{{ kid.display_letter }}</span>
+      {% endif %}
+    </div>
+    <div>
+      <h2 style="margin:.25rem 0 0 0;">Sveikas, {{ kid.name }}!</h2>
+      <div class="points-badge">⭐ {{ kid.points_balance }} taškai</div>
+      {% if next_reward %}
+        <div style="margin-top:.5rem; max-width:320px;">
+          <div class="small" style="font-weight:600;">Iki: {{ next_reward.title }} ({{ next_reward.cost_points }} tšk)</div>
+          <div class="progress-outer"><div class="progress-fill" style="--p: {{ progress_percent }}" title="{{ progress_percent }}%"></div></div>
+          <div class="small" style="text-align:right;">{{ progress_percent }}%</div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="grow">
+      <h3>🧹 Darbai</h3>
+      <div class="cards-grid">
+      {% for chore in chores %}
+        <div class="card chore-card">
+          <div><strong>{{ chore.title }}</strong><br><span class="small">+{{ chore.points }} tšk</span></div>
+          {% if chore.id in pending_chore_ids %}
+            <div class="small" style="margin-top:.5rem; font-weight:600; color:#ff9800;">⌛ Laukia patvirtinimo</div>
+          {% else %}
+          <form method="post" action="{% url 'complete_chore' chore.id %}" style="margin-top:.5rem;">
+            {% csrf_token %}
+            <button class="btn chore" type="submit">✅ Pateikti</button>
+          </form>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p>Nėra darbų.</p>
+      {% endfor %}
+      </div>
+    </div>
+
+    <div class="grow">
+      <h3>🎁 Apdovanojimai</h3>
+      <div class="cards-grid">
+      {% for reward in rewards %}
+        <div class="card reward-card">
+          <div><strong>{{ reward.title }}</strong><br><span class="small">{{ reward.cost_points }} tšk</span></div>
+          {% if reward.id in pending_reward_ids %}
+            <div class="small" style="margin-top:.5rem; font-weight:600; color:#ff9800;">⌛ Laukia patvirtinimo</div>
+          {% else %}
+          <form method="post" action="{% url 'redeem_reward' reward.id %}" style="margin-top:.5rem;">
+            {% csrf_token %}
+            <button class="btn reward" type="submit" {% if kid.points_balance < reward.cost_points %}disabled{% endif %}>🎯 Prašyti</button>
+          </form>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p>Nėra apdovanojimų.</p>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row pending-section">
+    <div class="grow">
+      <h3>⌛ Laukiantys darbai</h3>
+      <div class="cards-grid">
+      {% for log in pending_logs %}
+        <div class="card">
+          <div><strong>{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.get_status_display }}</span></div>
+        </div>
+      {% empty %}
+        <p>Nėra laukiančių.</p>
+      {% endfor %}
+      </div>
+    </div>
+    <div class="grow">
+      <h3>⌛ Laukiantys apdovanojimai</h3>
+      <div class="cards-grid">
+      {% for red in pending_redemptions %}
+        <div class="card">
+          <div><strong>{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.get_status_display }}</span></div>
+        </div>
+      {% empty %}
+        <p>Nėra laukiančių.</p>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="grow">
+      <h3>✅ Patvirtinti darbai (paskutiniai)</h3>
+      <div class="cards-grid">
+      {% for log in approved_logs %}
+        <div class="card" style="border-left:6px solid #66bb6a;">
+          <div><strong>{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.processed_at|date:"Y-m-d H:i" }}</span></div>
+        </div>
+      {% empty %}
+        <p>Dar nėra patvirtintų.</p>
+      {% endfor %}
+      </div>
+    </div>
+    <div class="grow">
+      <h3>🎉 Patvirtinti apdovanojimai (paskutiniai)</h3>
+      <div class="cards-grid">
+      {% for red in approved_redemptions %}
+        <div class="card" style="border-left:6px solid #ab47bc;">
+          <div><strong>{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.processed_at|date:"Y-m-d H:i" }}</span></div>
+        </div>
+      {% empty %}
+        <p>Dar nėra patvirtintų.</p>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <p><a class="btn" href="{% url 'kid_logout' %}">Atsijungti</a></p>
+  <canvas id="confetti-canvas" style="position:fixed; inset:0; width:100%; height:100%; pointer-events:none; display:none;"></canvas>
+  <script>
+    (function(){
+  const approvedNew = JSON.parse('{{ approved_new|yesno:"true,false" }}');
+      if(!approvedNew) return;
+      const c = document.getElementById('confetti-canvas');
+      c.style.display='block';
+      const ctx = c.getContext('2d');
+      function resize(){c.width=window.innerWidth; c.height=window.innerHeight;} resize(); window.addEventListener('resize',resize);
+      const pieces = Array.from({length:160},()=>({
+        x: Math.random()*c.width,
+        y: Math.random()*-c.height,
+        r: 6+Math.random()*6,
+        d: 4+Math.random()*4,
+        c: `hsl(${Math.random()*360},80%,60%)`,
+        tilt: Math.random()*10,
+        tiltDir: Math.random()<.5?-1:1
+      }));
+      let frame=0; const maxFrames=320; function draw(){
+        ctx.clearRect(0,0,c.width,c.height);
+        pieces.forEach(p=>{
+          ctx.beginPath();
+            ctx.fillStyle=p.c;
+            ctx.ellipse(p.x,p.y,p.r/2,p.r,Math.PI/4,0,Math.PI*2);
+            ctx.fill();
+            p.y += p.d; p.x += Math.sin((frame+p.y)/25); p.tilt += p.tiltDir*0.5;
+            if(p.y>c.height) {p.y=-20; p.x=Math.random()*c.width;}
+        });
+        frame++; if(frame<maxFrames) requestAnimationFrame(draw); else setTimeout(()=>{c.style.opacity='0'; setTimeout(()=>c.remove(),600);},800);
+      }
+      requestAnimationFrame(draw);
+    })();
+  </script>
+{% endblock %}

@@ -1,0 +1,159 @@
+from django.db import models, transaction
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from pathlib import Path
+from io import BytesIO
+try:
+    from PIL import Image
+except ImportError:  # Pillow should be installed; safeguard
+    Image = None
+
+User = get_user_model()
+
+class Kid(models.Model):
+    parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="kids")
+    name = models.CharField(max_length=100)
+    pin = models.CharField(max_length=20)  # Plaintext (MVP only)
+    points_balance = models.IntegerField(default=0)
+    active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    avatar_emoji = models.CharField(max_length=4, blank=True, default="", help_text="Emoji (jei tuščia – generuojama raidė)")
+    photo = models.ImageField(upload_to="kid_avatars/", null=True, blank=True, help_text="Nuotrauka (jei nenaudojamas emoji)")
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # After initial save ensure photo (if any) is resized (max 400x400)
+        if self.photo and Image:
+            photo_path = Path(self.photo.path)
+            try:
+                with Image.open(photo_path) as img:
+                    if img.width > 400 or img.height > 400:
+                        img.thumbnail((400, 400))
+                        img.save(photo_path)
+            except Exception:
+                # silently ignore processing errors (keep original)
+                pass
+
+    @property
+    def display_letter(self) -> str:
+        if self.name:
+            return self.name[0].upper()
+        return "?"
+
+    def __str__(self):
+        return f"{self.name} ({self.parent.username})"
+
+class Chore(models.Model):
+    parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chores")
+    title = models.CharField(max_length=200)
+    points = models.IntegerField(default=1)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.title} (+{self.points} pts)"
+
+class Reward(models.Model):
+    parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="rewards")
+    title = models.CharField(max_length=200)
+    cost_points = models.IntegerField(default=5)
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.title} (-{self.cost_points} pts)"
+
+class ChoreLog(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+
+    child = models.ForeignKey(Kid, on_delete=models.CASCADE, related_name="chore_logs")
+    chore = models.ForeignKey(Chore, on_delete=models.PROTECT)
+    logged_at = models.DateTimeField(auto_now_add=True)
+    points_awarded = models.IntegerField()
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.points_awarded:
+            self.points_awarded = self.chore.points
+        super().save(*args, **kwargs)
+
+    def approve(self):
+        if self.status != self.Status.PENDING:
+            return False
+        with transaction.atomic():
+            self.child.points_balance += self.points_awarded
+            self.child.save(update_fields=["points_balance"])
+            self.status = self.Status.APPROVED
+            self.processed_at = timezone.now()
+            self.save(update_fields=["status", "processed_at"])
+        return True
+
+    def reject(self):
+        if self.status != self.Status.PENDING:
+            return False
+        self.status = self.Status.REJECTED
+        self.processed_at = timezone.now()
+        self.save(update_fields=["status", "processed_at"])
+        return True
+
+class Redemption(models.Model):
+    class Status(models.TextChoices):
+        PENDING = "PENDING", "Pending"
+        APPROVED = "APPROVED", "Approved"
+        REJECTED = "REJECTED", "Rejected"
+
+    child = models.ForeignKey(Kid, on_delete=models.CASCADE, related_name="redemptions")
+    reward = models.ForeignKey(Reward, on_delete=models.PROTECT)
+    redeemed_at = models.DateTimeField(auto_now_add=True)
+    cost_points = models.IntegerField()
+    status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    def save(self, *args, **kwargs):
+        if self._state.adding and not self.cost_points:
+            self.cost_points = self.reward.cost_points
+        super().save(*args, **kwargs)
+
+    def approve(self):
+        if self.status != self.Status.PENDING:
+            return False
+        # ensure sufficient points at approval time
+        if self.child.points_balance < self.cost_points:
+            return False
+        with transaction.atomic():
+            self.child.points_balance -= self.cost_points
+            self.child.save(update_fields=["points_balance"])
+            self.status = self.Status.APPROVED
+            self.processed_at = timezone.now()
+            self.save(update_fields=["status", "processed_at"])
+        return True
+
+
+class PointAdjustment(models.Model):
+    parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="point_adjustments")
+    kid = models.ForeignKey(Kid, on_delete=models.CASCADE, related_name="point_adjustments")
+    points = models.IntegerField(help_text="Positive or negative integer to adjust balance")
+    reason = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        is_new = self._state.adding
+        super().save(*args, **kwargs)
+        if is_new:
+            # apply adjustment after creation to have record even if update fails
+            self.kid.points_balance += self.points
+            self.kid.save(update_fields=["points_balance"])
+
+    def __str__(self):
+        sign = '+' if self.points >= 0 else ''
+        return f"Adj {sign}{self.points} for {self.kid.name}"
+
+    def reject(self):
+        if self.status != self.Status.PENDING:
+            return False
+        self.status = self.Status.REJECTED
+        self.processed_at = timezone.now()
+        self.save(update_fields=["status", "processed_at"])
+        return True
