@@ -5,6 +5,7 @@ from django.views.decorators.http import require_http_methods
 from .forms import KidLoginForm
 from .models import Kid, Chore, Reward, ChoreLog, Redemption
 from django.utils import timezone
+import json
 
 def index(request):
     return render(request, "index.html")
@@ -75,6 +76,20 @@ def kid_home(request):
             approved_new = new_approved_logs or new_approved_reds
     # update timestamp AFTER computing
     request.session["last_seen_approval_ts"] = now_ts.isoformat()
+    
+    # Milestone unlock detection: check if map_position has advanced
+    last_seen_map_position = request.session.get("last_seen_map_position", 0)
+    milestone_unlocked = kid.map_position > last_seen_map_position
+    newly_unlocked_milestones = []
+    if milestone_unlocked:
+        # Find which milestones were just unlocked
+        map_data_temp = kid.get_map_progress()
+        for milestone in map_data_temp['milestones']:
+            if last_seen_map_position < milestone['position'] <= kid.map_position:
+                newly_unlocked_milestones.append(milestone)
+    # Update last seen map position
+    request.session["last_seen_map_position"] = kid.map_position
+    
     # Recent approved history (limit 10 each)
     approved_logs = kid.chore_logs.filter(status=ChoreLog.Status.APPROVED).order_by('-processed_at')[:10]
     approved_redemptions = kid.redemptions.filter(status=Redemption.Status.APPROVED).order_by('-processed_at')[:10]
@@ -97,6 +112,9 @@ def kid_home(request):
             "approved_logs": approved_logs,
             "approved_redemptions": approved_redemptions,
             "map_data": map_data,
+            "milestone_unlocked": milestone_unlocked,
+            "newly_unlocked_milestones": newly_unlocked_milestones,
+            "newly_unlocked_milestones_json": json.dumps(newly_unlocked_milestones),
         },
     )
 
