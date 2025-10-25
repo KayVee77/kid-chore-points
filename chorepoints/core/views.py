@@ -92,13 +92,16 @@ def kid_home(request):
     request.session["last_seen_map_position"] = kid.map_position
     
     # Track newly affordable rewards (treasure unlock effect)
-    last_seen_balance = request.session.get("last_seen_balance", 0)
+    last_seen_balance = request.session.get("last_seen_balance", kid.points_balance)
+    points_changed = kid.points_balance != last_seen_balance
+    old_points_balance = last_seen_balance
     newly_affordable_reward_ids = []
     if kid.points_balance > last_seen_balance:
         # Find rewards that just became affordable
         for reward in rewards:
             if last_seen_balance < reward.cost_points <= kid.points_balance:
                 newly_affordable_reward_ids.append(reward.id)
+    # Update last seen balance AFTER we've captured the old value
     request.session["last_seen_balance"] = kid.points_balance
     
     # Recent approved history (limit 10 each)
@@ -125,6 +128,21 @@ def kid_home(request):
             if segment_length > 0:
                 old_progress_percentage = min(100, int((progress_in_segment / segment_length) * 100))
     
+    # Convert Django messages to JSON for toast notifications
+    django_messages = []
+    storage = messages.get_messages(request)
+    for message in storage:
+        level_map = {
+            messages.SUCCESS: 'success',
+            messages.INFO: 'info',
+            messages.WARNING: 'info',
+            messages.ERROR: 'error',
+        }
+        django_messages.append({
+            'message': str(message),
+            'level': level_map.get(message.level, 'info')
+        })
+    
     return render(
         request,
         "kid/home.html",
@@ -148,6 +166,9 @@ def kid_home(request):
             "old_map_position": old_map_position,
             "old_progress_percentage": old_progress_percentage,
             "newly_affordable_reward_ids": newly_affordable_reward_ids,
+            "django_messages_json": json.dumps(django_messages),
+            "points_changed": points_changed,
+            "old_points_balance": old_points_balance,
         },
     )
 

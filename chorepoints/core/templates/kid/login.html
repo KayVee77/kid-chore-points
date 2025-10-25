@@ -1,45 +1,640 @@
 {% extends "base.html" %}
 {% block content %}
   <style>
-    .kid-grid {display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:1rem; margin:1rem 0;}
-    .kid-tile {border:3px solid #222; border-radius:1rem; padding:.75rem .5rem; text-align:center; cursor:pointer; transition:.25s; background:linear-gradient(135deg,#fff,#f1f1f1); position:relative; overflow:hidden;}
-    .kid-tile:before {content:""; position:absolute; inset:0; background:radial-gradient(circle at 30% 20%,rgba(255,255,255,.6),transparent); opacity:.7; pointer-events:none;}
-    .kid-tile.selected {border-color:#ff9800; box-shadow:0 4px 12px -2px rgba(0,0,0,.35); transform:translateY(-4px);}
-    .kid-tile .avatar {font-size:2.4rem; display:block; line-height:1;}
-    .kid-tile input {display:none;}
-    .kid-photo {width:64px; height:64px; object-fit:cover; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,.25); margin:0 auto .25rem auto; display:block;}
+    /* Page container with entrance animation */
+    .login-container {
+      animation: fade-in 0.6s ease-out;
+    }
+    
+    @keyframes fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Page title */
+    .login-title {
+      font-size: 1.75rem;
+      margin-bottom: 1.5rem;
+      color: #212121;
+      animation: slide-in 0.8s ease-out;
+    }
+    
+    @keyframes slide-in {
+      from {
+        opacity: 0;
+        transform: translateX(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    
+    /* Kid grid with staggered animations */
+    .kid-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    
+    .kid-tile {
+      border: 3px solid #222;
+      border-radius: 1rem;
+      padding: .75rem .5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      background: linear-gradient(135deg, #fff, #f1f1f1);
+      position: relative;
+      overflow: hidden;
+      animation: tile-entrance 0.6s ease-out both;
+    }
+    
+    .kid-tile:nth-child(1) { animation-delay: 0.1s; }
+    .kid-tile:nth-child(2) { animation-delay: 0.2s; }
+    .kid-tile:nth-child(3) { animation-delay: 0.3s; }
+    .kid-tile:nth-child(4) { animation-delay: 0.4s; }
+    
+    @keyframes tile-entrance {
+      from {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+    
+    .kid-tile:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 20%, rgba(255, 255, 255, .6), transparent);
+      opacity: .7;
+      pointer-events: none;
+    }
+    
+    .kid-tile:hover {
+      transform: translateY(-6px) scale(1.05);
+      box-shadow: 0 8px 20px -4px rgba(0, 0, 0, .25), 0 0 30px rgba(255, 152, 0, .4);
+      animation: tile-glow 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes tile-glow {
+      0%, 100% {
+        box-shadow: 0 8px 20px -4px rgba(0, 0, 0, .25), 0 0 20px rgba(255, 152, 0, .3);
+      }
+      50% {
+        box-shadow: 0 8px 20px -4px rgba(0, 0, 0, .25), 0 0 40px rgba(255, 152, 0, .6);
+      }
+    }
+    
+    .kid-tile.selected {
+      border-color: #ff9800;
+      box-shadow: 0 6px 24px -2px rgba(255, 152, 0, .5);
+      transform: translateY(-4px) scale(1.08);
+      background: linear-gradient(135deg, #fff9e6, #ffedd5);
+      animation: wobble 0.5s ease-in-out;
+    }
+    
+    @keyframes wobble {
+      0%, 100% { transform: translateY(-4px) scale(1.08) rotate(0deg); }
+      25% { transform: translateY(-4px) scale(1.08) rotate(-3deg); }
+      75% { transform: translateY(-4px) scale(1.08) rotate(3deg); }
+    }
+    
+    .kid-tile .avatar {
+      font-size: 2.4rem;
+      display: block;
+      line-height: 1;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .2));
+    }
+    
+    .kid-tile input {
+      display: none;
+    }
+    
+    .kid-photo {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, .25);
+      margin: 0 auto .25rem auto;
+      display: block;
+    }
+    
+    .kid-tile:hover .avatar,
+    .kid-tile:hover .kid-photo {
+      animation: avatar-bounce 0.6s ease-in-out infinite;
+    }
+    
+    @keyframes avatar-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+    
+    /* PIN Pad Interface */
+    .pin-section {
+      margin: 2rem 0;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 1rem;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, .08);
+    }
+    
+    .pin-label {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    
+    /* PIN Display (dots) */
+    .pin-display {
+      display: flex;
+      justify-content: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      min-height: 40px;
+      align-items: center;
+    }
+    
+    .pin-dot {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #ccc;
+      border-radius: 50%;
+      background: transparent;
+      transition: all 0.3s;
+    }
+    
+    .pin-dot.filled {
+      background: #ff9800;
+      border-color: #ff9800;
+      animation: dot-fill 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      box-shadow: 0 0 12px rgba(255, 152, 0, .8), 0 0 20px rgba(255, 152, 0, .4);
+    }
+    
+    @keyframes dot-fill {
+      0% {
+        transform: scale(0);
+        background: #e0e0e0;
+      }
+      50% {
+        transform: scale(1.5);
+        background: #ffa726;
+        box-shadow: 0 0 20px rgba(255, 152, 0, 1);
+      }
+      70% {
+        transform: scale(0.9);
+      }
+      100% {
+        transform: scale(1);
+        background: #ff9800;
+      }
+    }
+    
+    /* PIN Pad Grid */
+    .pin-pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+    
+    .pin-button {
+      background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+      border: 2px solid #dee2e6;
+      border-radius: 12px;
+      padding: 1rem;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #212121;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+      user-select: none;
+      min-height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .pin-button:hover {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, .15);
+    }
+    
+    .pin-button:active {
+      transform: translateY(0) scale(0.95);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, .1);
+      animation: button-press 0.2s;
+    }
+    
+    @keyframes button-press {
+      0% { transform: scale(1); }
+      50% { transform: scale(0.92); }
+      100% { transform: scale(0.95); }
+    }
+    
+    .pin-button.clear {
+      background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+      border-color: #ef5350;
+      color: #c62828;
+      font-size: 1rem;
+      grid-column: span 2;
+    }
+    
+    .pin-button.clear:hover {
+      background: linear-gradient(135deg, #ffcdd2 0%, #ef9a9a 100%);
+    }
+    
+    .pin-button.submit {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      border-color: #4caf50;
+      color: #2e7d32;
+      font-size: 1rem;
+      grid-column: span 3;
+      margin-top: 0.5rem;
+    }
+    
+    .pin-button.submit:hover:not(:disabled) {
+      background: linear-gradient(135deg, #c8e6c9 0%, #a5d6a7 100%);
+    }
+    
+    .pin-button.submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Error shake animation */
+    .pin-display.error {
+      animation: shake 0.6s cubic-bezier(.36,.07,.19,.97);
+    }
+    
+    .pin-display.error .pin-dot {
+      animation: error-flash 0.6s;
+    }
+    
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+      20%, 40%, 60%, 80% { transform: translateX(10px); }
+    }
+    
+    @keyframes error-flash {
+      0%, 100% { 
+        background: transparent;
+        border-color: #ccc;
+      }
+      25%, 75% { 
+        background: #ef5350;
+        border-color: #ef5350;
+        box-shadow: 0 0 20px rgba(239, 83, 80, .8);
+      }
+      50% {
+        background: #f44336;
+        border-color: #f44336;
+        box-shadow: 0 0 30px rgba(244, 67, 54, 1);
+      }
+    }
+    
+    /* Success animation */
+    .pin-display.success .pin-dot {
+      background: #4caf50;
+      border-color: #4caf50;
+      animation: success-pulse 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes success-pulse {
+      0% { 
+        transform: scale(1);
+        box-shadow: 0 0 0 rgba(76, 175, 80, 0);
+      }
+      50% { 
+        transform: scale(1.4);
+        box-shadow: 0 0 30px rgba(76, 175, 80, 1);
+      }
+      100% { 
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(76, 175, 80, .6);
+      }
+    }
+    
+    /* Success form transition */
+    .login-container.success-transition {
+      animation: fadeOutScale 0.8s ease-out forwards;
+    }
+    
+    .login-container.success-transition .kid-tile.selected {
+      animation: selectedKidZoom 0.8s ease-out forwards;
+    }
+    
+    @keyframes fadeOutScale {
+      0% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+    }
+    
+    @keyframes selectedKidZoom {
+      0% {
+        transform: translateY(-4px) scale(1.08);
+        opacity: 1;
+      }
+      50% {
+        transform: translateY(-4px) scale(1.3);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(-4px) scale(1.5);
+        opacity: 0;
+      }
+    }
+    
+    /* Hidden inputs */
+    #id_pin {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .submit-btn-wrapper {
+      margin-top: 1rem;
+      text-align: center;
+    }
+    
+    .submit-btn-wrapper button {
+      display: none;
+    }
+    
+    /* Error message styling */
+    .errorlist {
+      color: #d32f2f;
+      background: #ffebee;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      margin: 1rem 0;
+      list-style: none;
+      font-weight: 600;
+      animation: error-fade-in 0.4s;
+    }
+    
+    @keyframes error-fade-in {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    /* Encouragement messages */
+    .encouragement {
+      text-align: center;
+      color: #666;
+      font-size: 0.95rem;
+      margin-top: 1rem;
+      animation: fade-in 1s ease-out 0.5s both;
+    }
+    
+    /* Reduced motion support */
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+    
+    /* Mobile optimization */
+    @media (max-width: 768px) {
+      .pin-pad {
+        gap: 0.5rem;
+        max-width: 240px;
+      }
+      .pin-button {
+        padding: 0.75rem;
+        font-size: 1.3rem;
+        min-height: 50px;
+      }
+    }
   </style>
-  <h2>Pasirink savo profilį</h2>
-  <form method="post" id="kid-login-form">
-    {% csrf_token %}
-    <div style="margin-bottom:.5rem;">Įvesk PIN:</div>
-    {{ form.pin }}
-    <div style="margin-top:1rem;">Vaikai:</div>
-    <div class="kid-grid">
-      {% for option in form.kid.field.queryset %}
-        <label class="kid-tile" data-kid-id="{{ option.id }}">
-          <input type="radio" name="kid" value="{{ option.id }}" {% if form.kid.value == option.id %}checked{% endif %}>
-          {% if option.photo %}
-            <img src="{{ option.photo.url }}" class="kid-photo" alt="{{ option.name }}">
-          {% elif option.avatar_emoji %}
-            <span class="avatar">{{ option.avatar_emoji }}</span>
-          {% else %}
-            <span class="avatar" style="background:#1976d2; color:#fff; width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto .25rem; box-shadow:0 2px 4px rgba(0,0,0,.25);">{{ option.display_letter }}</span>
-          {% endif %}
-          <span style="font-weight:600; display:block;">{{ option.name }}</span>
-        </label>
-      {% empty %}
-        <p>Nėra vaikų.</p>
-      {% endfor %}
-    </div>
-    <button class="btn" type="submit">Prisijungti</button>
-  </form>
+  
+  <div class="login-container">
+    <h2 class="login-title">🎯 Pasirink savo profilį</h2>
+    
+    <form method="post" id="kid-login-form">
+      {% csrf_token %}
+      
+      <!-- Hidden PIN input (kept for form submission) -->
+      {{ form.pin }}
+      
+      <!-- Kid selection -->
+      <div style="margin-bottom: 0.75rem; font-weight: 600; color: #555;">Vaikai:</div>
+      <div class="kid-grid">
+        {% for option in form.kid.field.queryset %}
+          <label class="kid-tile" data-kid-id="{{ option.id }}">
+            <input type="radio" name="kid" value="{{ option.id }}" {% if form.kid.value == option.id %}checked{% endif %} required>
+            {% if option.photo %}
+              <img src="{{ option.photo.url }}" class="kid-photo" alt="{{ option.name }}">
+            {% elif option.avatar_emoji %}
+              <span class="avatar">{{ option.avatar_emoji }}</span>
+            {% else %}
+              <span class="avatar" style="background:#1976d2; color:#fff; width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; margin:0 auto .25rem; box-shadow:0 2px 4px rgba(0,0,0,.25);">{{ option.display_letter }}</span>
+            {% endif %}
+            <span style="font-weight:600; display:block; color:#333;">{{ option.name }}</span>
+          </label>
+        {% empty %}
+          <p>Nėra vaikų.</p>
+        {% endfor %}
+      </div>
+      
+      <!-- PIN Pad Section -->
+      <div class="pin-section">
+        <div class="pin-label">🔒 Įvesk savo PIN kodą</div>
+        
+        <!-- PIN Display (dots) -->
+        <div class="pin-display" id="pinDisplay">
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+          <div class="pin-dot"></div>
+        </div>
+        
+        <!-- PIN Pad -->
+        <div class="pin-pad">
+          <button type="button" class="pin-button" data-digit="1">1</button>
+          <button type="button" class="pin-button" data-digit="2">2</button>
+          <button type="button" class="pin-button" data-digit="3">3</button>
+          <button type="button" class="pin-button" data-digit="4">4</button>
+          <button type="button" class="pin-button" data-digit="5">5</button>
+          <button type="button" class="pin-button" data-digit="6">6</button>
+          <button type="button" class="pin-button" data-digit="7">7</button>
+          <button type="button" class="pin-button" data-digit="8">8</button>
+          <button type="button" class="pin-button" data-digit="9">9</button>
+          <button type="button" class="pin-button clear" id="clearBtn">✕ Išvalyti</button>
+          <button type="button" class="pin-button" data-digit="0">0</button>
+          <button type="button" class="pin-button submit" id="submitBtn" disabled>✓ Prisijungti</button>
+        </div>
+        
+        <div class="encouragement">
+          💡 Įvesk savo 4 skaitmenų PIN kodą
+        </div>
+      </div>
+      
+      <!-- Hidden submit button for form -->
+      <div class="submit-btn-wrapper">
+        <button class="btn" type="submit" id="hiddenSubmit">Prisijungti</button>
+      </div>
+    </form>
+  </div>
+  
   <script>
-    (function(){
-      const tiles=[...document.querySelectorAll('.kid-tile')];
-      function sync(){tiles.forEach(t=>{const i=t.querySelector('input'); t.classList.toggle('selected', i.checked);});}
-      tiles.forEach(t=>t.addEventListener('click',()=>{const i=t.querySelector('input'); i.checked=true; sync();}));
-      sync();
+    (function() {
+      // Kid tile selection
+      const tiles = [...document.querySelectorAll('.kid-tile')];
+      function syncTiles() {
+        tiles.forEach(t => {
+          const input = t.querySelector('input');
+          t.classList.toggle('selected', input.checked);
+        });
+      }
+      tiles.forEach(t => t.addEventListener('click', () => {
+        const input = t.querySelector('input');
+        input.checked = true;
+        syncTiles();
+      }));
+      syncTiles();
+      
+      // PIN Pad functionality
+      const pinInput = document.getElementById('id_pin');
+      const pinDisplay = document.getElementById('pinDisplay');
+      const pinDots = pinDisplay.querySelectorAll('.pin-dot');
+      const clearBtn = document.getElementById('clearBtn');
+      const submitBtn = document.getElementById('submitBtn');
+      const form = document.getElementById('kid-login-form');
+      let pinValue = '';
+      const maxLength = 4;
+      
+      // Digit button clicks
+      document.querySelectorAll('.pin-button[data-digit]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (pinValue.length < maxLength) {
+            pinValue += btn.dataset.digit;
+            updateDisplay();
+          }
+        });
+      });
+      
+      // Clear button
+      clearBtn.addEventListener('click', () => {
+        pinValue = '';
+        updateDisplay();
+        pinDisplay.classList.remove('error');
+      });
+      
+      // Submit button
+      submitBtn.addEventListener('click', () => {
+        if (pinValue.length === maxLength) {
+          // Check if kid is selected
+          const selectedKid = document.querySelector('input[name="kid"]:checked');
+          if (!selectedKid) {
+            alert('⚠️ Pasirink savo profilį!');
+            return;
+          }
+          
+          // Set the hidden PIN input value
+          pinInput.value = pinValue;
+          
+          // Show success animation
+          pinDisplay.classList.add('success');
+          
+          // Add success transition to entire form
+          const container = document.querySelector('.login-container');
+          setTimeout(() => {
+            container.classList.add('success-transition');
+          }, 300);
+          
+          // Submit form after animations complete
+          setTimeout(() => {
+            form.submit();
+          }, 800);
+        }
+      });
+      
+      // Update display
+      function updateDisplay() {
+        pinDots.forEach((dot, index) => {
+          if (index < pinValue.length) {
+            dot.classList.add('filled');
+          } else {
+            dot.classList.remove('filled');
+          }
+        });
+        
+        // Update hidden input
+        pinInput.value = pinValue;
+        
+        // Enable/disable submit button
+        submitBtn.disabled = pinValue.length !== maxLength;
+        
+        // Auto-submit when 4 digits entered (optional - remove if want explicit submit)
+        if (pinValue.length === maxLength) {
+          const selectedKid = document.querySelector('input[name="kid"]:checked');
+          if (selectedKid) {
+            // Optionally auto-submit after short delay
+            // setTimeout(() => submitBtn.click(), 300);
+          }
+        }
+      }
+      
+      // Keyboard support for accessibility
+      document.addEventListener('keydown', (e) => {
+        if (e.key >= '0' && e.key <= '9' && pinValue.length < maxLength) {
+          pinValue += e.key;
+          updateDisplay();
+        } else if (e.key === 'Backspace' || e.key === 'Delete') {
+          pinValue = pinValue.slice(0, -1);
+          updateDisplay();
+          pinDisplay.classList.remove('error');
+        } else if (e.key === 'Enter' && pinValue.length === maxLength) {
+          submitBtn.click();
+        }
+      });
+      
+      // Show error animation if form has errors
+      {% if form.errors %}
+      pinDisplay.classList.add('error');
+      setTimeout(() => {
+        pinDisplay.classList.remove('error');
+        // Clear PIN after error shake
+        pinValue = '';
+        updateDisplay();
+      }, 600);
+      {% endif %}
+      
+      // Initialize display
+      updateDisplay();
     })();
   </script>
 {% endblock %}

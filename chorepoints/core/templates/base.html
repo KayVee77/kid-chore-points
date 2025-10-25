@@ -3,21 +3,462 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Taškų Nuotykis</title>
+    <title>Taškų Nuotykis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      body { font-family: system-ui, sans-serif; margin: 2rem; }
-      .btn { padding: .5rem 1rem; border: 1px solid #111; background: #f3f3f3; cursor: pointer; }
-      .btn[disabled] { opacity: .5; cursor: not-allowed; }
-      .card { border:1px solid #ddd; padding:1rem; margin:.5rem 0; border-radius:.5rem; }
-      .row { display:flex; gap:1rem; flex-wrap:wrap; }
-      .grow { flex:1 1 300px; }
-      .flash { padding:.5rem 1rem; margin:.5rem 0; border-left: 4px solid #333; background:#fafafa; }
+      /* CSS Variables for Consistent Theming */
+      :root {
+        /* Primary Kid-Friendly Colors */
+        --color-primary: #FF9800;
+        --color-primary-light: #FFB74D;
+        --color-primary-dark: #F57C00;
+        
+        --color-success: #4CAF50;
+        --color-success-light: #81C784;
+        --color-success-dark: #388E3C;
+        
+        --color-info: #2196F3;
+        --color-info-light: #64B5F6;
+        --color-info-dark: #1976D2;
+        
+        --color-reward: #9C27B0;
+        --color-reward-light: #BA68C8;
+        --color-reward-dark: #7B1FA2;
+        
+        --color-warning: #FF9800;
+        --color-danger: #F44336;
+        
+        /* Neutral Colors */
+        --color-gray-50: #FAFAFA;
+        --color-gray-100: #F5F5F5;
+        --color-gray-200: #EEEEEE;
+        --color-gray-300: #E0E0E0;
+        --color-gray-400: #BDBDBD;
+        --color-gray-500: #9E9E9E;
+        --color-gray-600: #757575;
+        --color-gray-700: #616161;
+        --color-gray-800: #424242;
+        --color-gray-900: #212121;
+        
+        /* Gradients */
+        --gradient-warm: linear-gradient(135deg, #FFE0B2 0%, #FFCCBC 100%);
+        --gradient-cool: linear-gradient(135deg, #B3E5FC 0%, #81D4FA 100%);
+        --gradient-success: linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%);
+        --gradient-rainbow: linear-gradient(90deg, #FF6B6B, #FFD93D, #6BCF7F, #4D96FF, #9D6CFF);
+        
+        /* Shadows */
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        
+        /* Typography */
+        --font-family: 'Fredoka', system-ui, -apple-system, sans-serif;
+      }
+      
+      * {
+        box-sizing: border-box;
+      }
+      
+      body { 
+        font-family: var(--font-family);
+        margin: 0;
+        padding: 2rem;
+        background: linear-gradient(135deg, #FFF9F0 0%, #FFF 50%, #F0F9FF 100%);
+        min-height: 100vh;
+        color: var(--color-gray-900);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      
+      /* Phase 3.1: Enhanced Typography for Kid-Friendly Interface */
+      h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-family);
+        font-weight: 600;
+        line-height: 1.3;
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+        color: var(--color-gray-900);
+      }
+      
+      /* Kid-facing content should have larger, more readable text */
+      h1 {
+        font-size: 2.5rem; /* 40px - large and engaging */
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      
+      h2 {
+        font-size: 2rem; /* 32px - section headers */
+        font-weight: 600;
+      }
+      
+      h3 {
+        font-size: 1.5rem; /* 24px - subsections */
+        font-weight: 600;
+      }
+      
+      h4 {
+        font-size: 1.25rem; /* 20px - smaller headings */
+        font-weight: 600;
+      }
+      
+      h5, h6 {
+        font-size: 1.125rem; /* 18px - minor headings */
+        font-weight: 500;
+      }
+      
+      p {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        line-height: 1.8; /* More breathing room for kid readability */
+      }
+      
+      /* Improved text blocks for longer content */
+      .text-block {
+        line-height: 1.8;
+        font-size: 1.0625rem; /* 17px - slightly larger for comfort */
+      }
+      
+      /* Small text should still be readable */
+      small {
+        font-size: 0.875rem; /* 14px */
+        line-height: 1.5;
+      }
+      
+      /* Font fallback chain for offline support */
+      @supports not (font-family: 'Fredoka') {
+        :root {
+          --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 
+                         Roboto, 'Helvetica Neue', Arial, sans-serif,
+                         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+        }
+      }
+      
+      /* Enhanced Button Styles */
+      .btn { 
+        padding: .75rem 1.5rem;
+        border: 2px solid var(--color-gray-800);
+        background: linear-gradient(135deg, #ffffff 0%, var(--color-gray-100) 100%);
+        cursor: pointer;
+        border-radius: 12px;
+        font-family: var(--font-family);
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        box-shadow: var(--shadow-md);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .btn:before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+      }
+      
+      .btn:hover:not([disabled]) {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+      }
+      
+      .btn:active:not([disabled]) {
+        transform: translateY(0) scale(0.98);
+        box-shadow: var(--shadow-sm);
+      }
+      
+      .btn:active:not([disabled]):before {
+        width: 300px;
+        height: 300px;
+      }
+      
+      .btn[disabled] { 
+        opacity: .5;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+      
+      /* Card Styles */
+      .card { 
+        border: 2px solid var(--color-gray-200);
+        padding: 1.25rem;
+        margin: .75rem 0;
+        border-radius: 16px;
+        background: white;
+        box-shadow: var(--shadow);
+        transition: all 0.3s ease;
+      }
+      
+      .card:hover {
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-2px);
+      }
+      
+      /* Layout */
+      .row { 
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        margin: 1rem 0;
+      }
+      
+      .grow { 
+        flex: 1 1 300px;
+      }
+      
+      /* Enhanced Flash Messages */
+      .flash-container {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+        max-width: 400px;
+        pointer-events: none;
+      }
+      
+      .flash { 
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 500;
+        box-shadow: var(--shadow-xl);
+        animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        pointer-events: auto;
+        position: relative;
+        overflow: hidden;
+        background: white;
+        border-left: 6px solid var(--color-info);
+      }
+      
+      .flash:before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 6px;
+        animation: progressBar 5s linear forwards;
+      }
+      
+      .flash.success {
+        border-left-color: var(--color-success);
+        background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+        color: var(--color-success-dark);
+      }
+      
+      .flash.success:before {
+        background: var(--color-success);
+      }
+      
+      .flash.error {
+        border-left-color: var(--color-danger);
+        background: linear-gradient(135deg, #FFEBEE 0%, #FFCDD2 100%);
+        color: #C62828;
+      }
+      
+      .flash.error:before {
+        background: var(--color-danger);
+      }
+      
+      .flash.warning {
+        border-left-color: var(--color-warning);
+        background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 100%);
+        color: #E65100;
+      }
+      
+      .flash.warning:before {
+        background: var(--color-warning);
+      }
+      
+      .flash.info {
+        border-left-color: var(--color-info);
+        background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+        color: var(--color-info-dark);
+      }
+      
+      .flash.info:before {
+        background: var(--color-info);
+      }
+      
+      @keyframes slideInRight {
+        from {
+          opacity: 0;
+          transform: translateX(100px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+      
+      @keyframes progressBar {
+        from {
+          width: 0;
+        }
+        to {
+          width: 100%;
+        }
+      }
+      
+      /* Auto-dismiss flash messages */
+      .flash {
+        animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), 
+                   fadeOut 0.3s ease 4.7s forwards;
+      }
+      
+      @keyframes fadeOut {
+        to {
+          opacity: 0;
+          transform: translateX(50px);
+        }
+      }
+      
+      /* Mobile Responsiveness */
+      @media (max-width: 768px) {
+        body {
+          padding: 1rem;
+        }
+        
+        .flash-container {
+          right: 0.5rem;
+          left: 0.5rem;
+          max-width: none;
+        }
+        
+        .btn {
+          padding: .625rem 1.25rem;
+          font-size: 0.95rem;
+        }
+        
+        /* Smaller headings on mobile */
+        h1 { font-size: 2rem; }
+        h2 { font-size: 1.75rem; }
+        h3 { font-size: 1.375rem; }
+      }
+      
+      /* Phase 3.2: Icon & Emoji Consistency */
+      
+      /* Base emoji styling with depth effect */
+      .emoji,
+      [class*="emoji-"] {
+        display: inline-block;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        user-select: none;
+        transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+      
+      /* Emoji size utility classes */
+      .emoji-sm {
+        font-size: 1.5rem; /* 24px - inline icons */
+      }
+      
+      .emoji-md {
+        font-size: 2rem; /* 32px - list items, buttons */
+      }
+      
+      .emoji-lg {
+        font-size: 3rem; /* 48px - headers, featured content */
+      }
+      
+      .emoji-xl {
+        font-size: 4rem; /* 64px - avatars, hero sections */
+      }
+      
+      /* Hover animations for interactive emojis */
+      .emoji-hover:hover,
+      .emoji-sm:hover,
+      .emoji-md:hover,
+      .emoji-lg:hover,
+      .emoji-xl:hover {
+        transform: scale(1.1);
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      
+      /* Specific hover animation variants */
+      .emoji-bounce:hover {
+        animation: emojiBounce 0.6s ease-in-out;
+      }
+      
+      .emoji-rotate:hover {
+        animation: emojiRotate 0.5s ease-in-out;
+      }
+      
+      .emoji-wiggle:hover {
+        animation: emojiWiggle 0.5s ease-in-out;
+      }
+      
+      .emoji-pulse:hover {
+        animation: emojiPulse 0.6s ease-in-out;
+      }
+      
+      /* Emoji animations */
+      @keyframes emojiBounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        25% { transform: translateY(-10px) scale(1.05); }
+        50% { transform: translateY(0) scale(1.1); }
+        75% { transform: translateY(-5px) scale(1.05); }
+      }
+      
+      @keyframes emojiRotate {
+        0% { transform: rotate(0deg) scale(1); }
+        25% { transform: rotate(-15deg) scale(1.1); }
+        75% { transform: rotate(15deg) scale(1.1); }
+        100% { transform: rotate(0deg) scale(1); }
+      }
+      
+      @keyframes emojiWiggle {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg) scale(1.05); }
+        75% { transform: rotate(5deg) scale(1.05); }
+      }
+      
+      @keyframes emojiPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); text-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); }
+      }
+      
+      /* Context-specific emoji sizing */
+      h1 .emoji, h1 [class*="emoji-"] { font-size: 3rem; }
+      h2 .emoji, h2 [class*="emoji-"] { font-size: 2.5rem; }
+      h3 .emoji, h3 [class*="emoji-"] { font-size: 2rem; }
+      .btn .emoji, .btn [class*="emoji-"] { font-size: 1.25rem; vertical-align: middle; }
+      .card .emoji, .card [class*="emoji-"] { font-size: 2rem; }
+      
+      /* Reduced Motion Support */
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+        }
+        
+        .emoji,
+        [class*="emoji-"] {
+          transition: none !important;
+          animation: none !important;
+        }
+      }
     </style>
   </head>
   <body>
-    {% for msg in messages %}
-      <div class="flash">{{ msg }}</div>
-    {% endfor %}
+    <div class="flash-container">
+      {% for msg in messages %}
+        <div class="flash {% if msg.tags %}{{ msg.tags }}{% endif %}">{{ msg }}</div>
+      {% endfor %}
+    </div>
     {% block content %}{% endblock %}
   </body>
 </html>

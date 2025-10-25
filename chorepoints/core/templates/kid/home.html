@@ -1,20 +1,428 @@
 {% extends "base.html" %}
 {% block content %}
   <style>
-    .points-badge {background:#ffd54f; display:inline-block; padding:.25rem .75rem; border-radius:2rem; font-weight:600; box-shadow:0 2px 4px rgba(0,0,0,.2);}
-    .avatar {font-size:2.5rem; line-height:1; filter: drop-shadow(0 2px 2px rgba(0,0,0,.25));}
-    .cards-grid {display:grid; gap:.75rem; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));}
-    .card {position:relative; overflow:hidden;}
-    .card:before {content:""; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.15),rgba(255,255,255,0)); pointer-events:none;}
-    .chore-card {border-left:6px solid #4caf50;}
-    .reward-card {border-left:6px solid #1976d2;}
-    .pending-section .card {border-left:6px solid #ff9800;}
-    .small {font-size:.8rem; opacity:.75;}
-    .icon {margin-right:.25rem;}
-    .btn.chore {background:#e8f5e9;}
-    .btn.reward {background:#e3f2fd;}
-  .progress-outer {background:#eee; height:14px; border-radius:8px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.2);}
-  .progress-fill {background:linear-gradient(90deg,#42a5f5,#66bb6a); height:100%; width:calc(var(--p,0) * 1%); transition:width .6s;}
+    /* Toast Notification System */
+    .kid-toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .kid-toast {
+      min-width: 280px;
+      max-width: 420px;
+      padding: 1rem 1.5rem;
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.25);
+      transform: translateX(450px);
+      transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55), opacity 0.3s;
+      opacity: 0;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 600;
+      font-size: 1rem;
+      border: 3px solid rgba(255,255,255,.9);
+    }
+    .kid-toast-show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .kid-toast-success {
+      background: linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%);
+      color: #2e7d32;
+    }
+    .kid-toast-error {
+      background: linear-gradient(135deg, #FFCDD2 0%, #EF9A9A 100%);
+      color: #c62828;
+    }
+    .kid-toast-info {
+      background: linear-gradient(135deg, #B3E5FC 0%, #81D4FA 100%);
+      color: #01579b;
+    }
+    .toast-emoji {
+      font-size: 1.8rem;
+      line-height: 1;
+      animation: toastEmojiBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    @keyframes toastEmojiBounce {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+    @media (max-width: 768px) {
+      .kid-toast-container {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+      }
+      .kid-toast {
+        min-width: auto;
+        width: 100%;
+      }
+    }
+
+    /* Loading States */
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .loading-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .loading-spinner {
+      width: 80px;
+      height: 80px;
+      border: 8px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #FFD93D;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      box-shadow: 0 0 20px rgba(255, 217, 61, 0.5);
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .loading-text {
+      position: absolute;
+      top: 60%;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 700;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      margin-top: 1rem;
+    }
+    /* Button loading state */
+    .btn-loading {
+      position: relative;
+      color: transparent !important;
+      pointer-events: none;
+      opacity: 0.7;
+    }
+    .btn-loading:after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      top: 50%;
+      left: 50%;
+      margin-left: -10px;
+      margin-top: -10px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    /* Enhanced Header Styling */
+    .header-section {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,.08);
+      margin-bottom: 2rem;
+      animation: slideInDown 0.6s ease-out;
+    }
+    
+    @keyframes slideInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .points-badge {
+      background: linear-gradient(135deg, #FFD93D 0%, #FFA726 100%);
+      display: inline-block;
+      padding: .5rem 1.25rem;
+      border-radius: 2rem;
+      font-weight: 700;
+      font-size: 1.1rem;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, .4);
+      animation: pointsPulse 2s ease-in-out infinite;
+      border: 3px solid white;
+      transition: all 0.3s ease;
+    }
+    
+    .points-badge.animating {
+      animation: pointsChange 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes pointsChange {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); box-shadow: 0 8px 20px rgba(255, 152, 0, .8); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes pointsPulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 12px rgba(255, 152, 0, .4);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(255, 152, 0, .6);
+      }
+    }
+    
+    .avatar {
+      font-size: 3rem;
+      line-height: 1;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,.2));
+      animation: avatarFloat 3s ease-in-out infinite;
+    }
+    
+    @keyframes avatarFloat {
+      0%, 100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+    
+    /* Enhanced Cards Grid */
+    .cards-grid {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      animation: fadeIn 0.8s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    
+    /* Enhanced Card Styles with 3D Effects */
+    .card {
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      cursor: pointer;
+    }
+    
+    .card:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,.4), rgba(255,255,255,0));
+      pointer-events: none;
+      z-index: 1;
+    }
+    
+    /* Shimmer effect on hover */
+    .card:after {
+      content: "";
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.8) 50%,
+        transparent 70%
+      );
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+      transition: transform 0.8s;
+      pointer-events: none;
+      z-index: 2;
+    }
+    
+    .card:hover:after {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+    
+    .card:hover {
+      transform: translateY(-8px) rotateX(2deg) scale(1.02);
+      box-shadow: 0 12px 28px -4px rgba(0, 0, 0, .25);
+    }
+    
+    /* Chore Cards - Success Theme */
+    .chore-card {
+      border-left: 6px solid var(--color-success);
+      background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 50%, #fff 100%);
+      border: 3px solid #A5D6A7;
+    }
+    
+    .chore-card:hover {
+      border-color: var(--color-success);
+      background: linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 50%, #E8F5E9 100%);
+    }
+    
+    /* Reward Cards - Info Theme */
+    .reward-card {
+      border-left: 6px solid var(--color-info);
+      background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 50%, #fff 100%);
+      border: 3px solid #90CAF9;
+    }
+    
+    .reward-card:hover {
+      border-color: var(--color-info);
+      background: linear-gradient(135deg, #BBDEFB 0%, #90CAF9 50%, #E3F2FD 100%);
+    }
+    
+    /* Pending Cards - Warning Theme */
+    .pending-section .card {
+      border-left: 6px solid var(--color-warning);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE0B2 50%, #fff 100%);
+      border: 3px solid #FFCC80;
+      animation: pendingPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pendingPulse {
+      0%, 100% {
+        box-shadow: 0 2px 8px rgba(255, 152, 0, .2);
+      }
+      50% {
+        box-shadow: 0 4px 16px rgba(255, 152, 0, .4);
+      }
+    }
+    
+    /* Card Content Styling */
+    .card > div {
+      position: relative;
+      z-index: 3;
+    }
+    
+    .small {
+      font-size: .85rem;
+      opacity: .8;
+      font-weight: 500;
+    }
+    
+    .icon {
+      margin-right: .5rem;
+      font-size: 1.3rem;
+      vertical-align: middle;
+    }
+    
+    /* Enhanced Button Styles */
+    .btn.chore {
+      background: linear-gradient(135deg, var(--color-success-light) 0%, var(--color-success) 100%);
+      border-color: var(--color-success-dark);
+      color: white;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,.2);
+    }
+    
+    .btn.chore:hover:not([disabled]) {
+      background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-dark) 100%);
+      transform: translateY(-3px) scale(1.05);
+    }
+    
+    .btn.reward {
+      background: linear-gradient(135deg, var(--color-info-light) 0%, var(--color-info) 100%);
+      border-color: var(--color-info-dark);
+      color: white;
+      font-weight: 600;
+      text-shadow: 0 1px 2px rgba(0,0,0,.2);
+    }
+    
+    .btn.reward:hover:not([disabled]) {
+      background: linear-gradient(135deg, var(--color-info) 0%, var(--color-info-dark) 100%);
+      transform: translateY(-3px) scale(1.05);
+    }
+    
+    .btn[disabled] {
+      background: var(--color-gray-300);
+      border-color: var(--color-gray-400);
+      color: var(--color-gray-600);
+    }
+    
+    /* Section Headers with Icons */
+    h3 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 1.5rem 0 1rem 0;
+      color: var(--color-gray-800);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    
+    h3:before {
+      content: attr(data-icon);
+      font-size: 1.8rem;
+    }
+    
+    /* Enhanced Progress Bar */
+    .progress-outer {
+      background: linear-gradient(135deg, #E0E0E0 0%, #F5F5F5 100%);
+      height: 20px;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,.15);
+      border: 2px solid white;
+      position: relative;
+    }
+    
+    .progress-fill {
+      background: linear-gradient(90deg, #42a5f5, #66bb6a, #FFD93D);
+      height: 100%;
+      width: calc(var(--p,0) * 1%);
+      transition: width 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    }
+    
+    .progress-fill:before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,.3) 50%,
+        transparent 100%
+      );
+      animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-100%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
   
   /* Adventure Map Styles */
   .adventure-map {
@@ -26,106 +434,463 @@
     overflow: hidden;
   }
   
-  /* Theme: Island (default) */
+  /* Theme: Island (default) - Enhanced with waves, palm shadows, sand texture */
   .adventure-map.theme-island {
-    background: linear-gradient(135deg, #e3f2fd 0%, #fff9c4 100%);
+    background: 
+      /* Animated wave layer */
+      linear-gradient(135deg, transparent 0%, transparent 40%, rgba(3,169,244,.15) 100%),
+      /* Sandy beach gradient */
+      linear-gradient(135deg, #87ceeb 0%, #f4e4c1 50%, #daa520 100%);
+    background-size: 200% 200%, 100% 100%;
+    animation: islandWaves 8s ease-in-out infinite;
+    position: relative;
   }
+  
+  /* Animated wave effect */
+  @keyframes islandWaves {
+    0%, 100% { 
+      background-position: 0% 0%, 0% 0%; 
+    }
+    50% { 
+      background-position: 100% 100%, 0% 0%; 
+    }
+  }
+  
+  /* Sun with glow effect */
   .adventure-map.theme-island:before {
-    content: "";
+    content: "☀️";
     position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(255,235,59,.3) 0%, transparent 70%);
+    top: 5%;
+    right: 8%;
+    font-size: 3.5rem;
+    filter: drop-shadow(0 0 20px rgba(255,235,59,.8));
+    animation: islandSunGlow 4s ease-in-out infinite;
     pointer-events: none;
+    z-index: 1;
   }
+  
+  @keyframes islandSunGlow {
+    0%, 100% { 
+      filter: drop-shadow(0 0 20px rgba(255,235,59,.8));
+      transform: scale(1);
+    }
+    50% { 
+      filter: drop-shadow(0 0 35px rgba(255,235,59,1));
+      transform: scale(1.05);
+    }
+  }
+  
+  /* Palm tree shadows with sway animation */
+  .adventure-map.theme-island:after {
+    content: "🌴 🌴";
+    position: absolute;
+    bottom: 10%;
+    left: 5%;
+    font-size: 2.5rem;
+    filter: drop-shadow(3px 3px 8px rgba(0,0,0,.3));
+    animation: palmSway 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  @keyframes palmSway {
+    0%, 100% { 
+      transform: rotate(0deg);
+      filter: drop-shadow(3px 3px 8px rgba(0,0,0,.3));
+    }
+    25% { 
+      transform: rotate(-2deg);
+      filter: drop-shadow(1px 4px 8px rgba(0,0,0,.35));
+    }
+    75% { 
+      transform: rotate(2deg);
+      filter: drop-shadow(5px 2px 8px rgba(0,0,0,.35));
+    }
+  }
+  
+  /* Island-themed path with tropical colors */
   .adventure-map.theme-island .map-path:before {
     background: linear-gradient(90deg, 
-      #4caf50 0%, 
-      #8bc34a 25%, 
-      #ffeb3b 50%, 
-      #ff9800 75%, 
-      #f44336 100%
+      #4caf50 0%,  /* Tropical green */
+      #8bc34a 25%, /* Lime */
+      #ffeb3b 50%, /* Sunshine yellow */
+      #ff9800 75%, /* Orange sunset */
+      #f44336 100% /* Red hibiscus */
     );
+    filter: drop-shadow(0 2px 4px rgba(76,175,80,.4));
   }
   
-  /* Theme: Space */
+  /* Sand texture overlay using subtle pattern */
+  .adventure-map.theme-island .milestone {
+    background: rgba(255,255,255,.85);
+    box-shadow: 
+      0 4px 12px rgba(0,0,0,.15),
+      inset 0 1px 3px rgba(218,165,32,.2);
+  }
+  
+  /* Beach-themed milestone colors */
+  .adventure-map.theme-island .milestone.completed {
+    background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+    box-shadow: 0 6px 20px rgba(76,175,80,.4);
+  }
+  
+  .adventure-map.theme-island .milestone.current {
+    background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+    box-shadow: 0 6px 20px rgba(255,152,0,.5);
+    animation: beachPulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes beachPulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 6px 20px rgba(255,152,0,.5);
+    }
+    50% { 
+      transform: scale(1.08);
+      box-shadow: 0 8px 30px rgba(255,152,0,.7);
+    }
+  }
+  
+  
+  /* Theme: Space - Enhanced with animated stars, planets, nebula */
   .adventure-map.theme-space {
-    background: linear-gradient(135deg, #0d1117 0%, #1a1f35 50%, #2d1b69 100%);
+    background: 
+      /* Nebula glow overlay */
+      radial-gradient(ellipse at 20% 30%, rgba(156,39,176,.3) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 70%, rgba(33,150,243,.25) 0%, transparent 40%),
+      /* Deep space gradient */
+      linear-gradient(135deg, #0a0e27 0%, #1a1f4a 50%, #2d1b69 100%);
+    position: relative;
+    overflow: hidden;
   }
+  
+  /* Animated twinkling stars */
   .adventure-map.theme-space:before {
-    content: "✨ ⭐ 🌟 ☄️ 🪐";
+    content: "✨ ⭐ 🌟 💫 ✨ ⭐ 🌟 ⭐ ✨";
     position: absolute;
-    top: 10%;
-    left: 5%;
-    right: 5%;
-    font-size: 2rem;
-    opacity: .3;
-    letter-spacing: 3rem;
+    top: 8%;
+    left: 0;
+    right: 0;
+    font-size: 1.8rem;
+    opacity: .4;
+    letter-spacing: 4rem;
     pointer-events: none;
-    animation: twinkle 3s ease-in-out infinite;
+    animation: starTwinkle 4s ease-in-out infinite;
+    z-index: 1;
   }
+  
+  @keyframes starTwinkle {
+    0%, 100% { 
+      opacity: .3;
+      transform: scale(1);
+    }
+    25% { 
+      opacity: .6;
+      transform: scale(1.05);
+    }
+    50% { 
+      opacity: .4;
+      transform: scale(1.02);
+    }
+    75% { 
+      opacity: .7;
+      transform: scale(1.08);
+    }
+  }
+  
+  /* Orbiting planets */
+  .adventure-map.theme-space:after {
+    content: "🪐 🌍";
+    position: absolute;
+    bottom: 15%;
+    right: 10%;
+    font-size: 2.8rem;
+    filter: drop-shadow(0 0 15px rgba(100,181,246,.8));
+    animation: planetOrbit 12s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  @keyframes planetOrbit {
+    0% { 
+      transform: translateY(0) rotate(0deg);
+      filter: drop-shadow(0 0 15px rgba(100,181,246,.8));
+    }
+    25% { 
+      transform: translateY(-10px) rotate(90deg);
+      filter: drop-shadow(0 0 25px rgba(156,39,176,.9));
+    }
+    50% { 
+      transform: translateY(0) rotate(180deg);
+      filter: drop-shadow(0 0 15px rgba(100,181,246,.8));
+    }
+    75% { 
+      transform: translateY(10px) rotate(270deg);
+      filter: drop-shadow(0 0 20px rgba(233,30,99,.8));
+    }
+    100% { 
+      transform: translateY(0) rotate(360deg);
+      filter: drop-shadow(0 0 15px rgba(100,181,246,.8));
+    }
+  }
+  
+  /* Cosmic path with glow */
   .adventure-map.theme-space .map-path:before {
     background: linear-gradient(90deg, 
-      #00bcd4 0%, 
-      #2196f3 25%, 
-      #9c27b0 50%, 
-      #e91e63 75%, 
-      #ff5722 100%
+      #00bcd4 0%,  /* Cyan star */
+      #2196f3 25%, /* Blue galaxy */
+      #9c27b0 50%, /* Purple nebula */
+      #e91e63 75%, /* Pink cosmic */
+      #ff5722 100% /* Orange supernova */
     );
-    box-shadow: 0 0 10px rgba(33,150,243,.8);
-  }
-  .adventure-map.theme-space .map-title {
-    color: #00bcd4;
-    text-shadow: 0 0 10px rgba(0,188,212,.5);
-  }
-  .adventure-map.theme-space .map-progress-text {
-    color: #b3e5fc;
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: .3; }
-    50% { opacity: .6; }
+    box-shadow: 
+      0 0 10px rgba(33,150,243,.8),
+      0 0 20px rgba(156,39,176,.5);
+    animation: cosmicGlow 3s ease-in-out infinite;
   }
   
-  /* Theme: Rainbow Road */
-  .adventure-map.theme-rainbow {
-    background: linear-gradient(135deg, 
-      #ffebee 0%, 
-      #f3e5f5 20%,
-      #e8eaf6 40%,
-      #e0f2f1 60%,
-      #fff9c4 80%,
-      #ffe0b2 100%
-    );
+  @keyframes cosmicGlow {
+    0%, 100% { 
+      box-shadow: 0 0 10px rgba(33,150,243,.8), 0 0 20px rgba(156,39,176,.5);
+    }
+    50% { 
+      box-shadow: 0 0 20px rgba(33,150,243,1), 0 0 35px rgba(156,39,176,.8);
+    }
   }
+  
+  /* Space-themed text colors */
+  .adventure-map.theme-space .map-title {
+    color: #64b5f6;
+    text-shadow: 
+      0 0 10px rgba(100,181,246,.6),
+      0 0 20px rgba(33,150,243,.4);
+    animation: titleGlow 2s ease-in-out infinite;
+  }
+  
+  @keyframes titleGlow {
+    0%, 100% { 
+      text-shadow: 0 0 10px rgba(100,181,246,.6), 0 0 20px rgba(33,150,243,.4);
+    }
+    50% { 
+      text-shadow: 0 0 15px rgba(100,181,246,.9), 0 0 30px rgba(33,150,243,.6);
+    }
+  }
+  
+  .adventure-map.theme-space .map-progress-text {
+    color: #b3e5fc;
+    text-shadow: 0 0 8px rgba(179,229,252,.5);
+  }
+  
+  /* Space milestone styling */
+  .adventure-map.theme-space .milestone {
+    background: rgba(26,31,74,.9);
+    border: 2px solid rgba(100,181,246,.5);
+    box-shadow: 
+      0 4px 15px rgba(33,150,243,.3),
+      inset 0 0 20px rgba(156,39,176,.2);
+  }
+  
+  .adventure-map.theme-space .milestone.completed {
+    background: linear-gradient(135deg, #2196f3 0%, #00bcd4 100%);
+    box-shadow: 0 6px 25px rgba(33,150,243,.6);
+    border-color: #64b5f6;
+  }
+  
+  .adventure-map.theme-space .milestone.current {
+    background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);
+    box-shadow: 0 6px 25px rgba(156,39,176,.8);
+    animation: nebulaPulse 2s ease-in-out infinite;
+    border-color: #ba68c8;
+  }
+  
+  @keyframes nebulaPulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 6px 25px rgba(156,39,176,.8);
+    }
+    50% { 
+      transform: scale(1.1);
+      box-shadow: 0 8px 40px rgba(156,39,176,1), 0 0 60px rgba(233,30,99,.6);
+    }
+  }
+  
+  
+  /* Theme: Rainbow Road - Enhanced with color-shifting and sparkles */
+  .adventure-map.theme-rainbow {
+    background: 
+      linear-gradient(135deg, 
+        #ffebee 0%, 
+        #f3e5f5 20%,
+        #e8eaf6 40%,
+        #e0f2f1 60%,
+        #fff9c4 80%,
+        #ffe0b2 100%
+      );
+    background-size: 200% 200%;
+    animation: rainbowShift 10s ease-in-out infinite;
+    position: relative;
+  }
+  
+  @keyframes rainbowShift {
+    0%, 100% { 
+      background-position: 0% 50%; 
+    }
+    50% { 
+      background-position: 100% 50%; 
+    }
+  }
+  
+  /* Giant rainbow with glow */
   .adventure-map.theme-rainbow:before {
     content: "🌈";
     position: absolute;
     top: -10%;
     right: 10%;
     font-size: 8rem;
-    opacity: .4;
+    opacity: .5;
     pointer-events: none;
+    filter: drop-shadow(0 0 20px rgba(255,193,7,.6));
+    animation: rainbowFloat 6s ease-in-out infinite;
   }
+  
+  @keyframes rainbowFloat {
+    0%, 100% { 
+      transform: translateY(0) rotate(0deg);
+      opacity: .5;
+    }
+    50% { 
+      transform: translateY(-15px) rotate(5deg);
+      opacity: .7;
+    }
+  }
+  
+  /* Sparkle effects */
+  .adventure-map.theme-rainbow:after {
+    content: "✨ ⭐ ✨ 💫 ✨ ⭐ ✨";
+    position: absolute;
+    top: 20%;
+    left: 5%;
+    right: 5%;
+    font-size: 1.5rem;
+    opacity: .6;
+    letter-spacing: 3.5rem;
+    pointer-events: none;
+    animation: sparkleShine 3s ease-in-out infinite;
+    z-index: 1;
+  }
+  
+  @keyframes sparkleShine {
+    0%, 100% { 
+      opacity: .4;
+      transform: scale(1) rotate(0deg);
+    }
+    25% { 
+      opacity: .8;
+      transform: scale(1.1) rotate(5deg);
+    }
+    50% { 
+      opacity: .5;
+      transform: scale(1) rotate(0deg);
+    }
+    75% { 
+      opacity: .9;
+      transform: scale(1.15) rotate(-5deg);
+    }
+  }
+  
+  /* Vibrant rainbow path with color-shift animation */
   .adventure-map.theme-rainbow .map-path:before {
     background: linear-gradient(90deg, 
-      #f44336 0%, 
-      #ff9800 16.66%, 
-      #ffeb3b 33.33%, 
-      #4caf50 50%, 
-      #2196f3 66.66%, 
-      #9c27b0 83.33%, 
-      #e91e63 100%
+      #f44336 0%,    /* Red */
+      #ff9800 16.66%, /* Orange */
+      #ffeb3b 33.33%, /* Yellow */
+      #4caf50 50%,    /* Green */
+      #2196f3 66.66%, /* Blue */
+      #9c27b0 83.33%, /* Purple */
+      #e91e63 100%    /* Pink */
     );
+    background-size: 200% 100%;
     height: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    box-shadow: 
+      0 2px 8px rgba(0,0,0,.2),
+      0 0 15px rgba(255,193,7,.4);
+    animation: rainbowPathFlow 4s linear infinite;
   }
+  
+  @keyframes rainbowPathFlow {
+    0% { 
+      background-position: 0% 50%; 
+    }
+    100% { 
+      background-position: 200% 50%; 
+    }
+  }
+  
+  /* Animated gradient text title */
   .adventure-map.theme-rainbow .map-title {
-    background: linear-gradient(90deg, #f44336, #ff9800, #ffeb3b, #4caf50, #2196f3, #9c27b0);
+    background: linear-gradient(
+      90deg, 
+      #f44336, #ff9800, #ffeb3b, #4caf50, #2196f3, #9c27b0, #f44336
+    );
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: rainbowTextFlow 3s linear infinite;
+  }
+  
+  @keyframes rainbowTextFlow {
+    0% { 
+      background-position: 0% center; 
+    }
+    100% { 
+      background-position: 200% center; 
+    }
+  }
+  
+  /* Rainbow milestone styling */
+  .adventure-map.theme-rainbow .milestone {
+    background: rgba(255,255,255,.95);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 
+      0 4px 15px rgba(0,0,0,.15),
+      inset 0 0 20px rgba(255,193,7,.2);
+  }
+  
+  .adventure-map.theme-rainbow .milestone.completed {
+    background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+    box-shadow: 
+      0 6px 25px rgba(76,175,80,.5),
+      0 0 30px rgba(139,195,74,.3);
+  }
+  
+  .adventure-map.theme-rainbow .milestone.current {
+    background: linear-gradient(135deg, 
+      #f44336 0%, 
+      #ff9800 25%, 
+      #ffeb3b 50%, 
+      #ff9800 75%, 
+      #f44336 100%
+    );
+    background-size: 200% auto;
+    animation: rainbowPulse 2s ease-in-out infinite;
+    box-shadow: 
+      0 6px 30px rgba(255,152,0,.8),
+      0 0 40px rgba(255,235,59,.5);
+  }
+  
+  @keyframes rainbowPulse {
+    0%, 100% { 
+      transform: scale(1);
+      background-position: 0% center;
+      box-shadow: 0 6px 30px rgba(255,152,0,.8), 0 0 40px rgba(255,235,59,.5);
+    }
+    50% { 
+      transform: scale(1.12);
+      background-position: 100% center;
+      box-shadow: 0 8px 45px rgba(255,152,0,1), 0 0 60px rgba(255,235,59,.8);
+    }
   }
   
   .adventure-map:before {
@@ -163,6 +928,29 @@
     border-radius: 2px;
     z-index: 0;
   }
+  /* Animated dashed path trail */
+  .map-path:after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    margin-top: -1px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 10px,
+      rgba(255,255,255,.6) 10px,
+      rgba(255,255,255,.6) 20px
+    );
+    z-index: 0;
+    animation: pathDashMove 1.5s linear infinite;
+  }
+  @keyframes pathDashMove {
+    to { background-position: 20px 0; }
+  }
+  
   .milestone {
     position: relative;
     z-index: 1;
@@ -171,6 +959,57 @@
     align-items: center;
     gap: .5rem;
   }
+  
+  /* Milestone Hover Tooltip */
+  .milestone-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: white;
+    border: 3px solid #ff9800;
+    border-radius: 12px;
+    padding: .75rem 1rem;
+    font-size: .85rem;
+    font-weight: 700;
+    color: #333;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,.25);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    z-index: 10;
+    margin-bottom: .5rem;
+  }
+  .milestone-tooltip:after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 10px solid #ff9800;
+  }
+  .milestone:hover .milestone-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-16px);
+  }
+  .milestone.completed .milestone-tooltip {
+    border-color: #4caf50;
+  }
+  .milestone.completed .milestone-tooltip:after {
+    border-top-color: #4caf50;
+  }
+  .milestone.future .milestone-tooltip {
+    border-color: #bdbdbd;
+  }
+  .milestone.future .milestone-tooltip:after {
+    border-top-color: #bdbdbd;
+  }
+  
   .milestone-marker {
     width: 60px;
     height: 60px;
@@ -182,7 +1021,7 @@
     background: white;
     border: 4px solid #ddd;
     box-shadow: 0 4px 8px rgba(0,0,0,.2);
-    transition: all .3s;
+    transition: all .3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
   .milestone.completed .milestone-marker {
     border-color: #4caf50;
@@ -387,6 +1226,86 @@
     border: #2196f3;
   }
 
+  /* ========================================
+     PERFORMANCE OPTIMIZATIONS
+     ======================================== */
+  
+  /* GPU Acceleration - will-change for frequently animated elements */
+  .milestone-marker,
+  .kid-position,
+  .points-badge,
+  .badge,
+  .kid-card,
+  .kid-btn,
+  .loading-spinner,
+  .kid-toast {
+    will-change: transform;
+  }
+  
+  /* Limit will-change to hover/active states only */
+  .milestone:hover .milestone-marker,
+  .kid-card:hover,
+  .kid-btn:hover,
+  .badge:hover {
+    will-change: transform, box-shadow;
+  }
+  
+  /* Remove will-change after animation completes */
+  .milestone-marker.completed,
+  .badge-unlocked {
+    will-change: auto;
+  }
+  
+  /* Optimize theme background animations - use transform instead of background-position */
+  .theme-island::before,
+  .theme-space::before,
+  .theme-rainbow::before {
+    will-change: opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Reduce animation complexity on lower-end devices */
+  @media (hover: none) and (pointer: coarse) {
+    /* Mobile/touch devices - reduce animation complexity */
+    .sparkle-particle,
+    .theme-island .palm-tree:after,
+    .theme-space .star,
+    .theme-rainbow .sparkle {
+      animation-iteration-count: 3;
+    }
+  }
+  
+  /* Contain layout recalculations */
+  .adventure-map,
+  .cards-grid,
+  .header-section,
+  .achievement-badges {
+    contain: layout style paint;
+  }
+  
+  /* Lazy loading placeholder for images */
+  img[loading="lazy"] {
+    background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
+  }
+  
+  /* Optimize confetti canvas */
+  canvas {
+    transform: translateZ(0);
+    will-change: contents;
+  }
+  
+  /* Optimized animations using translate3d for GPU acceleration */
+  @keyframes optimizedFloat {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -8px, 0); }
+  }
+  
+  @keyframes optimizedPulse {
+    0%, 100% { transform: scale3d(1, 1, 1); }
+    50% { transform: scale3d(1.05, 1.05, 1); }
+  }
+
   /* Reduced Motion Support */
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -565,27 +1484,314 @@
       transform: scale(1) rotate(0deg);
     }
   }
+  
+  /* Achievement Badge System */
+  .achievement-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 0.75rem;
+  }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    box-shadow: 0 4px 8px rgba(0,0,0,.15);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .badge:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,.25);
+  }
+  
+  .badge-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+  }
+  
+  .badge-label {
+    white-space: nowrap;
+  }
+  
+  /* Badge variants */
+  .badge-unlocked {
+    background: linear-gradient(135deg, #FFE082 0%, #FFD54F 100%);
+    color: #F57F17;
+    border: 2px solid #FFF59D;
+  }
+  
+  .badge-locked {
+    background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+    color: #757575;
+    border: 2px solid #EEEEEE;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .badge-locked .badge-icon {
+    filter: grayscale(100%);
+  }
+  
+  /* Badge unlock animation */
+  .badge-unlock-anim {
+    animation: badgeUnlock 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  @keyframes badgeUnlock {
+    0% {
+      opacity: 0;
+      transform: scale(0) rotate(-180deg);
+    }
+    60% {
+      transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+  
+  /* Shine effect for unlocked badges */
+  .badge-unlocked::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 60%,
+      transparent 100%
+    );
+    animation: badgeShine 3s ease-in-out infinite;
+  }
+  
+  @keyframes badgeShine {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+  
+  /* Badge glow pulse for newly unlocked */
+  .badge-newly-unlocked {
+    animation: badgeGlow 1.5s ease-in-out 3;
+  }
+  
+  @keyframes badgeGlow {
+    0%, 100% {
+      box-shadow: 0 4px 8px rgba(0,0,0,.15);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(255, 193, 7, .8), 0 4px 8px rgba(0,0,0,.15);
+    }
+  }
+  
+  /* Badge categories with different colors */
+  .badge-chores.badge-unlocked {
+    background: linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%);
+    color: #2E7D32;
+    border-color: #C5E1A5;
+  }
+  
+  .badge-points.badge-unlocked {
+    background: linear-gradient(135deg, #FFE082 0%, #FFD54F 100%);
+    color: #F57F17;
+    border-color: #FFF59D;
+  }
+  
+  .badge-master.badge-unlocked {
+    background: linear-gradient(135deg, #E1BEE7 0%, #CE93D8 100%);
+    color: #6A1B9A;
+    border-color: #F3E5F5;
+  }
+  
+  /* Badge section header */
+  .badges-header {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-gray-700);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .badges-header-icon {
+    font-size: 1.25rem;
+  }
+  
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .achievement-badges {
+      gap: 0.375rem;
+    }
+    .badge {
+      padding: 0.375rem 0.625rem;
+      font-size: 0.75rem;
+    }
+    .badge-icon {
+      font-size: 1.25rem;
+    }
+  }
   </style>
-  <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+  
+  <div class="header-section">
     <div class="avatar">
       {% if kid.photo %}
-        <img src="{{ kid.photo.url }}" alt="{{ kid.name }}" style="width:72px; height:72px; object-fit:cover; border-radius:50%; box-shadow:0 2px 4px rgba(0,0,0,.25);" />
+        <img src="{{ kid.photo.url }}" alt="{{ kid.name }}" style="width:80px; height:80px; object-fit:cover; border-radius:50%; box-shadow:0 4px 8px rgba(0,0,0,.2); border: 4px solid white;" />
       {% elif kid.avatar_emoji %}
         {{ kid.avatar_emoji }}
       {% else %}
-        <span style="background:#1976d2; color:#fff; width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2rem;">{{ kid.display_letter }}</span>
+        <span style="background: linear-gradient(135deg, #1976d2, #42a5f5); color:#fff; width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2.5rem; box-shadow:0 4px 8px rgba(0,0,0,.2); border: 4px solid white;">{{ kid.display_letter }}</span>
       {% endif %}
     </div>
-    <div>
-      <h2 style="margin:.25rem 0 0 0;">Sveikas, {{ kid.name }}!</h2>
-      <div class="points-badge">⭐ {{ kid.points_balance }} taškai</div>
+    <div style="flex: 1;">
+      <h2 style="margin:0 0 .5rem 0; font-size: 2rem; color: var(--color-gray-800);">Sveikas, {{ kid.name }}!</h2>
+      <div id="points-badge" class="points-badge" data-current-points="{{ kid.points_balance }}" data-old-points="{{ old_points_balance }}">⭐ <span id="points-value">{{ kid.points_balance }}</span> taškai</div>
       {% if next_reward %}
-        <div style="margin-top:.5rem; max-width:320px;">
-          <div class="small" style="font-weight:600;">Iki: {{ next_reward.title }} ({{ next_reward.cost_points }} tšk)</div>
+        <div style="margin-top:.75rem; max-width:380px;">
+          <div class="small" style="font-weight:700; color: var(--color-gray-700); margin-bottom: .5rem;">🎯 Iki: {{ next_reward.title }} ({{ next_reward.cost_points }} tšk)</div>
           <div class="progress-outer"><div class="progress-fill" style="--p: {{ progress_percent }}" title="{{ progress_percent }}%"></div></div>
-          <div class="small" style="text-align:right;">{{ progress_percent }}%</div>
+          <div class="small" style="text-align:right; margin-top: .25rem; font-weight: 600;">{{ progress_percent }}%</div>
         </div>
       {% endif %}
+      
+      {# Achievement Badges Section #}
+      <div id="achievement-badges-container">
+        <div class="badges-header">
+          <span class="badges-header-icon">🏆</span>
+          <span>Pasiekimai</span>
+        </div>
+        <div class="achievement-badges" id="achievement-badges">
+          {# Badges will be populated by JavaScript #}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# Adventure Map Section #}
+  {% if map_data %}
+  <div class="adventure-map theme-{{ kid.map_theme|lower }}">
+    <h3 class="map-title">🗺️ Nuotykių Žemėlapis</h3>
+    <div class="map-path">
+      {# Start position #}
+      <div class="milestone completed">
+        <div class="milestone-marker">🏁</div>
+        <div class="milestone-label">Pradžia</div>
+      </div>
+      
+      {# Reward milestones #}
+      {% for milestone in map_data.milestones %}
+      <div class="milestone {% if milestone.position <= map_data.current_position %}completed{% elif milestone.position == map_data.next_reward_position %}current{% else %}future{% endif %} {% if milestone.reward_id in newly_affordable_reward_ids %}treasure-newly-affordable{% endif %}"
+           data-reward-id="{{ milestone.reward_id }}"
+           data-reward-title="{{ milestone.reward_title }}"
+           data-reward-icon="{{ milestone.reward_icon }}"
+           data-reward-points="{{ milestone.position }}"
+           data-current-points="{{ kid.points_balance }}"
+           data-map-position="{{ map_data.current_position }}"
+           data-is-achieved="{% if milestone.position <= map_data.current_position %}true{% else %}false{% endif %}"
+           role="button"
+           tabindex="0"
+           aria-label="{{ milestone.aria_label }}"
+           onkeypress="if(event.key==='Enter' || event.key===' '){showRewardDetails(this)}">
+        <div class="milestone-tooltip">
+          {{ milestone.reward_title }}
+          <br>
+          {% if milestone.position <= map_data.current_position %}
+            <small style="color: #4CAF50;">✅ Pasiekta!</small>
+          {% elif kid.points_balance >= milestone.position %}
+            <small style="color: #FF9800;">🎯 Gali prašyti!</small>
+          {% else %}
+            <small style="color: #9e9e9e;">🔒 {{ milestone.position }} tšk reikia</small>
+          {% endif %}
+        </div>
+        <div class="milestone-marker" onclick="showRewardDetails(this.parentElement)">
+          {{ milestone.reward_icon }}
+        </div>
+        <div class="milestone-label">
+          {{ milestone.reward_title }}<br>
+          <small>({{ milestone.position }} tšk)</small>
+        </div>
+      </div>
+      {% endfor %}
+      
+      {# Kid's current position indicator #}
+      {% if kid.avatar_emoji %}
+      <div class="kid-position {% if milestone_unlocked %}moving{% endif %}" 
+           id="kidPositionIndicator"
+           style="left: {{ map_data.progress_percentage }}%; --old-pos: {{ old_progress_percentage }}%; --new-pos: {{ map_data.progress_percentage }}%;">
+        {{ kid.avatar_emoji }}
+        {% if map_data.next_reward and map_data.points_needed > 0 %}
+        <div class="progress-bubble">
+          {% if map_data.points_needed <= 3 %}
+            🔥 Beveik ten! Dar {{ map_data.points_needed }} tšk!
+          {% elif map_data.points_needed <= 10 %}
+            💪 Dar {{ map_data.points_needed }} tšk!
+          {% else %}
+            ⭐ Dar {{ map_data.points_needed }} tšk!
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="kid-position {% if milestone_unlocked %}moving{% endif %}" 
+           id="kidPositionIndicator"
+           style="left: {{ map_data.progress_percentage }}%; --old-pos: {{ old_progress_percentage }}%; --new-pos: {{ map_data.progress_percentage }}%;">
+        🧒
+        {% if map_data.next_reward and map_data.points_needed > 0 %}
+        <div class="progress-bubble">
+          {% if map_data.points_needed <= 3 %}
+            🔥 Beveik ten! Dar {{ map_data.points_needed }} tšk!
+          {% elif map_data.points_needed <= 10 %}
+            💪 Dar {{ map_data.points_needed }} tšk!
+          {% else %}
+            ⭐ Dar {{ map_data.points_needed }} tšk!
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="map-progress-text">
+      {% if map_data.next_reward %}
+        <strong>Tu esi čia: {{ map_data.current_position }} tšk</strong> • 
+        Dar {{ map_data.points_needed }} tšk iki 
+        <strong>{{ map_data.next_reward.reward_title }}</strong>!
+      {% else %}
+        <strong>🎉 Sveikiname! Pasiekei visus apdovanojimus!</strong>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# Reward Detail Modal #}
+  <div id="rewardModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeRewardModal()"></div>
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeRewardModal()">✕</button>
+      <div class="modal-icon" id="modalIcon">🎁</div>
+      <h3 id="modalTitle">Apdovanojimas</h3>
+      <div class="modal-points" id="modalPoints">0 tšk</div>
+      <div class="modal-description" id="modalDescription"></div>
+      <div class="modal-status" id="modalStatus"></div>
     </div>
   </div>
 
@@ -695,7 +1901,7 @@
         <div class="card chore-card">
           <div>
             <strong>
-              {% if chore.icon_image %}<img src="{{ chore.icon_image.url }}" alt="" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif chore.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ chore.icon_emoji }}</span>{% endif %}
+              {% if chore.icon_image %}<img src="{{ chore.icon_image.url }}" alt="" loading="lazy" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif chore.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ chore.icon_emoji }}</span>{% endif %}
               {{ chore.title }}
             </strong><br><span class="small">+{{ chore.points }} tšk</span></div>
           {% if chore.id in pending_chore_ids %}
@@ -720,7 +1926,7 @@
         <div class="card reward-card">
           <div>
             <strong>
-              {% if reward.icon_image %}<img src="{{ reward.icon_image.url }}" alt="" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif reward.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ reward.icon_emoji }}</span>{% endif %}
+              {% if reward.icon_image %}<img src="{{ reward.icon_image.url }}" alt="" loading="lazy" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif reward.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ reward.icon_emoji }}</span>{% endif %}
               {{ reward.title }}
             </strong><br><span class="small">{{ reward.cost_points }} tšk</span></div>
           {% if reward.id in pending_reward_ids %}
@@ -745,7 +1951,7 @@
       <div class="cards-grid">
       {% for log in pending_logs %}
         <div class="card">
-          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.get_status_display }}</span></div>
+          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" loading="lazy" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.get_status_display }}</span></div>
         </div>
       {% empty %}
         <p>Nėra laukiančių.</p>
@@ -757,7 +1963,7 @@
       <div class="cards-grid">
       {% for red in pending_redemptions %}
         <div class="card">
-          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.get_status_display }}</span></div>
+          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" loading="lazy" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.get_status_display }}</span></div>
         </div>
       {% empty %}
         <p>Nėra laukiančių.</p>
@@ -772,7 +1978,7 @@
       <div class="cards-grid">
       {% for log in approved_logs %}
         <div class="card" style="border-left:6px solid #66bb6a;">
-          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.processed_at|date:"Y-m-d H:i" }}</span></div>
+          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" loading="lazy" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.processed_at|date:"Y-m-d H:i" }}</span></div>
         </div>
       {% empty %}
         <p>Dar nėra patvirtintų.</p>
@@ -784,7 +1990,7 @@
       <div class="cards-grid">
       {% for red in approved_redemptions %}
         <div class="card" style="border-left:6px solid #ab47bc;">
-          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.processed_at|date:"Y-m-d H:i" }}</span></div>
+          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" loading="lazy" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.processed_at|date:"Y-m-d H:i" }}</span></div>
         </div>
       {% empty %}
         <p>Dar nėra patvirtintų.</p>
@@ -794,6 +2000,186 @@
   </div>
 
   <p><a class="btn" href="{% url 'kid_logout' %}">Atsijungti</a></p>
+
+  {# Toast Notification Container #}
+  <div id="toast-container" class="kid-toast-container"></div>
+
+  {# Loading Overlay #}
+  <div id="loading-overlay" class="loading-overlay">
+    <div>
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Vykdoma...</div>
+    </div>
+  </div>
+
+  <script>
+    // Loading State Management
+    const loadingOverlay = document.getElementById('loading-overlay');
+    
+    function showLoading(message = 'Vykdoma...') {
+      if (loadingOverlay) {
+        const textEl = loadingOverlay.querySelector('.loading-text');
+        if (textEl) textEl.textContent = message;
+        loadingOverlay.classList.add('show');
+      }
+    }
+    
+    function hideLoading() {
+      if (loadingOverlay) {
+        loadingOverlay.classList.remove('show');
+      }
+    }
+    
+    // Form Submission Handler
+    function handleFormSubmit(form, button) {
+      // Prevent double submission
+      if (form.dataset.submitting === 'true') {
+        return false;
+      }
+      
+      form.dataset.submitting = 'true';
+      
+      // Add loading state to button
+      if (button) {
+        button.classList.add('btn-loading');
+        button.disabled = true;
+      }
+      
+      // Show overlay with custom message
+      const isChore = form.action.includes('complete_chore');
+      const isReward = form.action.includes('redeem_reward');
+      
+      if (isChore) {
+        showLoading('Pateikiamas darbas...');
+      } else if (isReward) {
+        showLoading('Prašomas apdovanojimas...');
+      } else {
+        showLoading('Vykdoma...');
+      }
+      
+      return true;
+    }
+    
+    // Attach handlers to all forms
+    document.addEventListener('DOMContentLoaded', function() {
+      const forms = document.querySelectorAll('form[action*="complete_chore"], form[action*="redeem_reward"]');
+      
+      forms.forEach(form => {
+        form.addEventListener('submit', function(e) {
+          const button = form.querySelector('button[type="submit"]');
+          
+          // Only handle if not already submitting
+          if (form.dataset.submitting !== 'true') {
+            handleFormSubmit(form, button);
+          }
+        });
+      });
+    });
+    
+    // Hide loading on page unload (if redirect doesn't happen)
+    window.addEventListener('pageshow', function(event) {
+      // If page is restored from cache (back button)
+      if (event.persisted) {
+        hideLoading();
+        // Re-enable all buttons
+        document.querySelectorAll('.btn-loading').forEach(btn => {
+          btn.classList.remove('btn-loading');
+          btn.disabled = false;
+        });
+        // Reset form states
+        document.querySelectorAll('form[data-submitting="true"]').forEach(form => {
+          form.dataset.submitting = 'false';
+        });
+      }
+    });
+
+    // Toast Notification System
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      
+      const toast = document.createElement('div');
+      toast.className = `kid-toast kid-toast-${type}`;
+      
+      const emojiMap = {
+        success: '🎉',
+        error: '❌',
+        info: 'ℹ️'
+      };
+      
+      toast.innerHTML = `
+        <span class="toast-emoji">${emojiMap[type] || '✅'}</span>
+        <span>${message}</span>
+      `;
+      
+      container.appendChild(toast);
+      
+      // Trigger show animation
+      setTimeout(() => toast.classList.add('kid-toast-show'), 10);
+      
+      // Auto-hide after 4 seconds
+      setTimeout(() => {
+        toast.classList.remove('kid-toast-show');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
+    }
+
+    // Show Django messages as toasts
+    (function() {
+      const messages = {{ django_messages_json|safe|default:"[]" }};
+      messages.forEach((msg, index) => {
+        setTimeout(() => {
+          showToast(msg.message, msg.level);
+        }, index * 150); // Stagger multiple messages
+      });
+    })();
+
+    // Point Counter Animation
+    function animatePointChange(oldValue, newValue) {
+      const badge = document.getElementById('points-badge');
+      const valueSpan = document.getElementById('points-value');
+      if (!badge || !valueSpan) return;
+      
+      const duration = 1000; // 1 second
+      const steps = 30;
+      const increment = (newValue - oldValue) / steps;
+      const stepDuration = duration / steps;
+      
+      let current = oldValue;
+      badge.classList.add('animating');
+      
+      const interval = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= newValue) || (increment < 0 && current <= newValue)) {
+          clearInterval(interval);
+          valueSpan.textContent = newValue;
+          setTimeout(() => {
+            badge.classList.remove('animating');
+          }, 300);
+        } else {
+          valueSpan.textContent = Math.round(current);
+        }
+      }, stepDuration);
+    }
+
+    // Trigger point animation on page load if points changed
+    (function() {
+      const pointsChanged = JSON.parse('{{ points_changed|yesno:"true,false" }}');
+      if (!pointsChanged) return;
+      
+      const badge = document.getElementById('points-badge');
+      if (!badge) return;
+      
+      const oldPoints = parseInt(badge.dataset.oldPoints) || 0;
+      const currentPoints = parseInt(badge.dataset.currentPoints) || 0;
+      
+      if (oldPoints !== currentPoints) {
+        setTimeout(() => {
+          animatePointChange(oldPoints, currentPoints);
+        }, 400); // Delay slightly for toast to appear first
+      }
+    })();
+  </script>
 
   <script>
     // Interactive Adventure Map Functions
@@ -918,34 +2304,353 @@
   <canvas id="confetti-canvas" style="position:fixed; inset:0; width:100%; height:100%; pointer-events:none; display:none;"></canvas>
   <script>
     (function(){
-  const approvedNew = JSON.parse('{{ approved_new|yesno:"true,false" }}');
+      const approvedNew = JSON.parse('{{ approved_new|yesno:"true,false" }}');
       if(!approvedNew) return;
+      
       const c = document.getElementById('confetti-canvas');
       c.style.display='block';
       const ctx = c.getContext('2d');
-      function resize(){c.width=window.innerWidth; c.height=window.innerHeight;} resize(); window.addEventListener('resize',resize);
-      const pieces = Array.from({length:160},()=>({
+      
+      function resize(){c.width=window.innerWidth; c.height=window.innerHeight;} 
+      resize(); 
+      window.addEventListener('resize',resize);
+      
+      // Enhanced color palette - vibrant, kid-friendly colors
+      const colors = [
+        '#FF6B6B', // Red
+        '#FF8E53', // Orange
+        '#FFD93D', // Yellow
+        '#6BCF7F', // Green
+        '#4D96FF', // Blue
+        '#9D6CFF', // Purple
+        '#FF6BCB', // Pink
+        '#45B7D1', // Cyan
+        '#FFA07A', // Light coral
+        '#98D8C8'  // Mint
+      ];
+      
+      // Shape types: 'circle', 'square', 'star'
+      const shapes = ['circle', 'square', 'star', 'circle', 'square']; // More circles for balance
+      
+      // Create 200 confetti pieces with variety
+      const pieces = Array.from({length:200},()=>({
         x: Math.random()*c.width,
-        y: Math.random()*-c.height,
-        r: 6+Math.random()*6,
-        d: 4+Math.random()*4,
-        c: `hsl(${Math.random()*360},80%,60%)`,
+        y: Math.random()*-c.height - 100, // Start higher for more staggered effect
+        r: 4+Math.random()*8, // Size: 4-12px
+        d: 2+Math.random()*4, // Fall speed: 2-6px per frame
+        c: colors[Math.floor(Math.random()*colors.length)], // Pick from palette
+        shape: shapes[Math.floor(Math.random()*shapes.length)], // Random shape
+        rotation: Math.random()*Math.PI*2, // Initial rotation
+        rotationSpeed: (Math.random()-0.5)*0.15, // Rotation speed
         tilt: Math.random()*10,
-        tiltDir: Math.random()<.5?-1:1
+        tiltDir: Math.random()<.5?-1:1,
+        opacity: 0.8 + Math.random()*0.2 // Slight opacity variation
       }));
-      let frame=0; const maxFrames=320; function draw(){
-        ctx.clearRect(0,0,c.width,c.height);
-        pieces.forEach(p=>{
-          ctx.beginPath();
-            ctx.fillStyle=p.c;
-            ctx.ellipse(p.x,p.y,p.r/2,p.r,Math.PI/4,0,Math.PI*2);
-            ctx.fill();
-            p.y += p.d; p.x += Math.sin((frame+p.y)/25); p.tilt += p.tiltDir*0.5;
-            if(p.y>c.height) {p.y=-20; p.x=Math.random()*c.width;}
-        });
-        frame++; if(frame<maxFrames) requestAnimationFrame(draw); else setTimeout(()=>{c.style.opacity='0'; setTimeout(()=>c.remove(),600);},800);
+      
+      let frame=0; 
+      const maxFrames=380; // Slightly longer animation (was 320)
+      
+      // Helper function to draw a star
+      function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+        let rot = Math.PI / 2 * 3;
+        let x = cx;
+        let y = cy;
+        const step = Math.PI / spikes;
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+          x = cx + Math.cos(rot) * outerRadius;
+          y = cy + Math.sin(rot) * outerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+          
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        ctx.fill();
       }
+      
+      function draw(){
+        ctx.clearRect(0,0,c.width,c.height);
+        
+        pieces.forEach(p=>{
+          ctx.save();
+          ctx.globalAlpha = p.opacity;
+          ctx.fillStyle = p.c;
+          
+          // Apply rotation
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          
+          // Draw based on shape
+          if (p.shape === 'circle') {
+            ctx.beginPath();
+            ctx.arc(0, 0, p.r, 0, Math.PI*2);
+            ctx.fill();
+          } else if (p.shape === 'square') {
+            ctx.fillRect(-p.r, -p.r, p.r*2, p.r*2);
+          } else if (p.shape === 'star') {
+            drawStar(ctx, 0, 0, 5, p.r, p.r*0.5);
+          }
+          
+          ctx.restore();
+          
+          // Update position and rotation
+          p.y += p.d; 
+          p.x += Math.sin((frame+p.y)/30)*0.5; // Gentler horizontal sway
+          p.rotation += p.rotationSpeed;
+          p.tilt += p.tiltDir*0.5;
+          
+          // Fade out as it falls
+          if (p.y > c.height * 0.8) {
+            p.opacity = Math.max(0, p.opacity - 0.02);
+          }
+          
+          // Recycle pieces that fall off screen
+          if(p.y > c.height + 20) {
+            p.y = -20; 
+            p.x = Math.random()*c.width;
+            p.opacity = 0.8 + Math.random()*0.2;
+          }
+        });
+        
+        frame++; 
+        if(frame < maxFrames) {
+          requestAnimationFrame(draw);
+        } else {
+          // Fade out animation
+          setTimeout(()=>{
+            c.style.transition = 'opacity 0.6s';
+            c.style.opacity='0'; 
+            setTimeout(()=>c.remove(), 600);
+          }, 800);
+        }
+      }
+      
       requestAnimationFrame(draw);
+    })();
+  </script>
+  
+  {# Achievement Badge System JavaScript #}
+  <script>
+    (function() {
+      // Badge definitions with thresholds
+      const badgeDefinitions = [
+        {
+          id: 'first-steps',
+          icon: '🌟',
+          label: 'Pirmi Žingsniai',
+          category: 'chores',
+          threshold: 1,
+          checkFn: (stats) => stats.approvedChores >= 1
+        },
+        {
+          id: 'getting-started',
+          icon: '⭐',
+          label: 'Pradedantysis',
+          category: 'chores',
+          threshold: 5,
+          checkFn: (stats) => stats.approvedChores >= 5
+        },
+        {
+          id: 'super-helper',
+          icon: '🌠',
+          label: 'Super Pagalbininkas',
+          category: 'chores',
+          threshold: 10,
+          checkFn: (stats) => stats.approvedChores >= 10
+        },
+        {
+          id: 'chore-champion',
+          icon: '🏆',
+          label: 'Darbų Čempionas',
+          category: 'chores',
+          threshold: 25,
+          checkFn: (stats) => stats.approvedChores >= 25
+        },
+        {
+          id: 'chore-legend',
+          icon: '👑',
+          label: 'Darbų Legenda',
+          category: 'chores',
+          threshold: 50,
+          checkFn: (stats) => stats.approvedChores >= 50
+        },
+        {
+          id: 'point-collector',
+          icon: '💰',
+          label: 'Taškų Rinkėjas',
+          category: 'points',
+          threshold: 50,
+          checkFn: (stats) => stats.currentPoints >= 50
+        },
+        {
+          id: 'points-master',
+          icon: '💎',
+          label: 'Taškų Meistras',
+          category: 'points',
+          threshold: 100,
+          checkFn: (stats) => stats.currentPoints >= 100
+        },
+        {
+          id: 'treasure-hunter',
+          icon: '🗺️',
+          label: 'Lobių Medžiotojas',
+          category: 'master',
+          threshold: 3,
+          checkFn: (stats) => stats.mapPosition >= 3
+        }
+      ];
+      
+      // Get stats from the page
+      const stats = {
+        approvedChores: {{ approved_logs.count }},
+        currentPoints: {{ kid.points_balance }},
+        mapPosition: {{ kid.map_position }},
+        approvedRedemptions: {{ approved_redemptions.count }}
+      };
+      
+      // Track newly unlocked badges for animation
+      const lastSeenBadges = JSON.parse(sessionStorage.getItem('lastSeenBadges') || '[]');
+      const currentUnlockedBadges = [];
+      
+      // Calculate which badges are unlocked
+      const container = document.getElementById('achievement-badges');
+      if (!container) return;
+      
+      badgeDefinitions.forEach(badge => {
+        const isUnlocked = badge.checkFn(stats);
+        if (isUnlocked) {
+          currentUnlockedBadges.push(badge.id);
+        }
+        
+        const isNewlyUnlocked = isUnlocked && !lastSeenBadges.includes(badge.id);
+        
+        const badgeEl = document.createElement('div');
+        badgeEl.className = `badge badge-${badge.category} ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}`;
+        badgeEl.title = isUnlocked 
+          ? `Atrakinta! ${badge.label}` 
+          : `Užrakinta (reikia: ${badge.threshold})`;
+        
+        badgeEl.innerHTML = `
+          <span class="badge-icon">${badge.icon}</span>
+          <span class="badge-label">${badge.label}</span>
+        `;
+        
+        // Add unlock animation for newly unlocked badges
+        if (isNewlyUnlocked) {
+          badgeEl.classList.add('badge-unlock-anim', 'badge-newly-unlocked');
+          
+          // Trigger confetti for first badge unlock
+          if (currentUnlockedBadges.length === 1) {
+            setTimeout(() => {
+              // Mini confetti burst
+              triggerBadgeConfetti();
+            }, 400);
+          }
+        }
+        
+        container.appendChild(badgeEl);
+      });
+      
+      // Update session storage with current unlocked badges
+      sessionStorage.setItem('lastSeenBadges', JSON.stringify(currentUnlockedBadges));
+      
+      // Badge unlock confetti (smaller, centered burst)
+      function triggerBadgeConfetti() {
+        const c = document.createElement('canvas');
+        c.style.position = 'fixed';
+        c.style.top = '0';
+        c.style.left = '0';
+        c.style.width = '100%';
+        c.style.height = '100%';
+        c.style.pointerEvents = 'none';
+        c.style.zIndex = '9998';
+        c.width = window.innerWidth;
+        c.height = window.innerHeight;
+        document.body.appendChild(c);
+        
+        const ctx = c.getContext('2d');
+        const particles = [];
+        const colors = ['#FFD700', '#FFA500', '#FF6347', '#32CD32', '#1E90FF', '#9370DB'];
+        const particleCount = 60; // Smaller burst
+        
+        // Create particles from badge area
+        const badgeContainer = document.getElementById('achievement-badges-container');
+        const rect = badgeContainer ? badgeContainer.getBoundingClientRect() : { left: window.innerWidth/2, top: 200 };
+        
+        for (let i = 0; i < particleCount; i++) {
+          particles.push({
+            x: rect.left + (badgeContainer ? badgeContainer.offsetWidth/2 : 0),
+            y: rect.top,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8 - 4,
+            size: 6 + Math.random() * 6,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 10,
+            opacity: 1,
+            shape: Math.random() > 0.5 ? 'circle' : 'star'
+          });
+        }
+        
+        let frame = 0;
+        const maxFrames = 120;
+        
+        function draw() {
+          ctx.clearRect(0, 0, c.width, c.height);
+          
+          particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.3; // gravity
+            p.rotation += p.rotationSpeed;
+            p.opacity = Math.max(0, 1 - (frame / maxFrames));
+            
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation * Math.PI / 180);
+            ctx.globalAlpha = p.opacity;
+            ctx.fillStyle = p.color;
+            
+            if (p.shape === 'circle') {
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              // Draw star
+              ctx.beginPath();
+              for (let i = 0; i < 5; i++) {
+                const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+                const x = Math.cos(angle) * p.size;
+                const y = Math.sin(angle) * p.size;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+              }
+              ctx.closePath();
+              ctx.fill();
+            }
+            
+            ctx.restore();
+          });
+          
+          frame++;
+          if (frame < maxFrames) {
+            requestAnimationFrame(draw);
+          } else {
+            c.style.transition = 'opacity 0.4s';
+            c.style.opacity = '0';
+            setTimeout(() => c.remove(), 400);
+          }
+        }
+        
+        requestAnimationFrame(draw);
+      }
     })();
   </script>
 {% endblock %}
