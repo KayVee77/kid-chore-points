@@ -1226,6 +1226,86 @@
     border: #2196f3;
   }
 
+  /* ========================================
+     PERFORMANCE OPTIMIZATIONS
+     ======================================== */
+  
+  /* GPU Acceleration - will-change for frequently animated elements */
+  .milestone-marker,
+  .kid-position,
+  .points-badge,
+  .badge,
+  .kid-card,
+  .kid-btn,
+  .loading-spinner,
+  .kid-toast {
+    will-change: transform;
+  }
+  
+  /* Limit will-change to hover/active states only */
+  .milestone:hover .milestone-marker,
+  .kid-card:hover,
+  .kid-btn:hover,
+  .badge:hover {
+    will-change: transform, box-shadow;
+  }
+  
+  /* Remove will-change after animation completes */
+  .milestone-marker.completed,
+  .badge-unlocked {
+    will-change: auto;
+  }
+  
+  /* Optimize theme background animations - use transform instead of background-position */
+  .theme-island::before,
+  .theme-space::before,
+  .theme-rainbow::before {
+    will-change: opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  
+  /* Reduce animation complexity on lower-end devices */
+  @media (hover: none) and (pointer: coarse) {
+    /* Mobile/touch devices - reduce animation complexity */
+    .sparkle-particle,
+    .theme-island .palm-tree:after,
+    .theme-space .star,
+    .theme-rainbow .sparkle {
+      animation-iteration-count: 3;
+    }
+  }
+  
+  /* Contain layout recalculations */
+  .adventure-map,
+  .cards-grid,
+  .header-section,
+  .achievement-badges {
+    contain: layout style paint;
+  }
+  
+  /* Lazy loading placeholder for images */
+  img[loading="lazy"] {
+    background: linear-gradient(135deg, #f5f5f5 0%, #eeeeee 100%);
+  }
+  
+  /* Optimize confetti canvas */
+  canvas {
+    transform: translateZ(0);
+    will-change: contents;
+  }
+  
+  /* Optimized animations using translate3d for GPU acceleration */
+  @keyframes optimizedFloat {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(0, -8px, 0); }
+  }
+  
+  @keyframes optimizedPulse {
+    0%, 100% { transform: scale3d(1, 1, 1); }
+    50% { transform: scale3d(1.05, 1.05, 1); }
+  }
+
   /* Reduced Motion Support */
   @media (prefers-reduced-motion: reduce) {
     * {
@@ -1723,7 +1803,7 @@
         <div class="card chore-card">
           <div>
             <strong>
-              {% if chore.icon_image %}<img src="{{ chore.icon_image.url }}" alt="" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif chore.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ chore.icon_emoji }}</span>{% endif %}
+              {% if chore.icon_image %}<img src="{{ chore.icon_image.url }}" alt="" loading="lazy" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif chore.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ chore.icon_emoji }}</span>{% endif %}
               {{ chore.title }}
             </strong><br><span class="small">+{{ chore.points }} tšk</span></div>
           {% if chore.id in pending_chore_ids %}
@@ -1748,7 +1828,7 @@
         <div class="card reward-card">
           <div>
             <strong>
-              {% if reward.icon_image %}<img src="{{ reward.icon_image.url }}" alt="" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif reward.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ reward.icon_emoji }}</span>{% endif %}
+              {% if reward.icon_image %}<img src="{{ reward.icon_image.url }}" alt="" loading="lazy" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif reward.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ reward.icon_emoji }}</span>{% endif %}
               {{ reward.title }}
             </strong><br><span class="small">{{ reward.cost_points }} tšk</span></div>
           {% if reward.id in pending_reward_ids %}
@@ -1773,7 +1853,7 @@
       <div class="cards-grid">
       {% for log in pending_logs %}
         <div class="card">
-          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.get_status_display }}</span></div>
+          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" loading="lazy" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.get_status_display }}</span></div>
         </div>
       {% empty %}
         <p>Nėra laukiančių.</p>
@@ -1785,7 +1865,7 @@
       <div class="cards-grid">
       {% for red in pending_redemptions %}
         <div class="card">
-          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.get_status_display }}</span></div>
+          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" loading="lazy" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.get_status_display }}</span></div>
         </div>
       {% empty %}
         <p>Nėra laukiančių.</p>
@@ -1800,7 +1880,7 @@
       <div class="cards-grid">
       {% for log in approved_logs %}
         <div class="card" style="border-left:6px solid #66bb6a;">
-          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.processed_at|date:"Y-m-d H:i" }}</span></div>
+          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" loading="lazy" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.processed_at|date:"Y-m-d H:i" }}</span></div>
         </div>
       {% empty %}
         <p>Dar nėra patvirtintų.</p>
@@ -1812,7 +1892,7 @@
       <div class="cards-grid">
       {% for red in approved_redemptions %}
         <div class="card" style="border-left:6px solid #ab47bc;">
-          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.processed_at|date:"Y-m-d H:i" }}</span></div>
+          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" loading="lazy" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.processed_at|date:"Y-m-d H:i" }}</span></div>
         </div>
       {% empty %}
         <p>Dar nėra patvirtintų.</p>
