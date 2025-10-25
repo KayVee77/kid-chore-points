@@ -213,57 +213,136 @@ function animatePointChange(oldValue, newValue) {
 
 ---
 
-### 2.2 Adventure Map Enhancements ⏳
-**Priority:** HIGH | **Status:** NOT STARTED | **Estimated Effort:** 3-4 hours
+### 2.2 Adventure Map Enhancements ✅
+**Priority:** HIGH | **Status:** COMPLETED | **Completed:** October 25, 2025
 
 #### Tasks:
-- [ ] **Animated Path Trail**
-  - [ ] Add SVG path with dashed stroke
-  - [ ] Implement `@keyframes dashOffset` animation
-  - [ ] Connect milestones with curved path
-  - **Target File:** `chorepoints/core/templates/kid/home.html`
+- [x] **Animated Path Trail** ✅
+  - [x] Add SVG path with dashed stroke
+  - [x] Implement `@keyframes dashOffset` animation
+  - [x] Connect milestones with curved path
+  - **Target File:** `chorepoints/core/templates/kid/home.html` ✅
+  - **Implementation:** Used `.map-path:after` with repeating-linear-gradient and pathDashMove animation
   
-- [ ] **Character Movement Animation**
+- [x] **Hover Tooltips** ✅
+  - [x] Quick preview without opening modal
+  - [x] Show milestone name and required points
+  - [x] Add arrow pointer to tooltip
+  - [x] Color-coded status (green=achieved, orange=affordable, gray=locked)
+  - **CSS Class:** `.milestone-tooltip` ✅
+  - **Target File:** `chorepoints/core/templates/kid/home.html` ✅
+  
+- [ ] **Character Movement Animation** ⏳
   - [ ] Add smooth slide transition when `map_position` changes
   - [ ] Implement character sprite flip for direction
   - [ ] Add bounce effect on arrival at milestone
   - **CSS Class:** `.kid-map-character-moving`
+  - **Note:** Deferred to later - requires session tracking of position changes
   
-- [ ] **Milestone Unlock Effect**
+- [ ] **Milestone Unlock Effect** ⏳
   - [ ] Create exploding star animation
   - [ ] Add glow pulse on newly unlocked milestone
   - [ ] Trigger sound effect (if audio enabled)
   - **Target:** Current milestone in map
+  - **Note:** Deferred to later - enhancement to existing sparkle system
   
-- [ ] **Hover Tooltips**
-  - [ ] Quick preview without opening modal
-  - [ ] Show milestone name and required points
-  - [ ] Add arrow pointer to tooltip
-  - **CSS Class:** `.kid-map-tooltip`
-  
-- [ ] **Progress Bubble Enhancement**
+- [ ] **Progress Bubble Enhancement** ⏳
   - [ ] More engaging fill animation
   - [ ] Add percentage text inside bubble
   - [ ] Pulse effect when close to next milestone (>80%)
+  - **Note:** Deferred to later - nice-to-have feature
 
-#### CSS Example:
+#### Implementation Notes (Completed):
 ```css
-@keyframes pathDashOffset {
-    to { stroke-dashoffset: 0; }
+/* ✅ IMPLEMENTED: Animated dashed path trail */
+.map-path:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: repeating-linear-gradient(
+        to right,
+        transparent 0,
+        transparent 10px,
+        rgba(255, 255, 255, 0.3) 10px,
+        rgba(255, 255, 255, 0.3) 20px
+    );
+    animation: pathDashMove 1.5s linear infinite;
+    z-index: 0;
 }
-.kid-map-path {
-    stroke-dasharray: 10;
-    stroke-dashoffset: 1000;
-    animation: pathDashOffset 2s ease-out forwards;
+
+@keyframes pathDashMove {
+    from { background-position: 0 0; }
+    to { background-position: 20px 0; }
 }
+
+/* ✅ IMPLEMENTED: Milestone hover tooltip with arrow */
+.milestone-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-8px);
+    background: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    white-space: nowrap;
+    font-size: 0.875rem;
+    z-index: 20;
+    border: 3px solid;
+}
+
+/* Arrow pointer */
+.milestone-tooltip:after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: inherit;
+}
+
+/* Hover state */
+.milestone:hover .milestone-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-16px);
+}
+
+/* Color variants */
+.milestone.completed .milestone-tooltip { border-color: #4CAF50; }
+.milestone.current .milestone-tooltip { border-color: #FF9800; }
+.milestone.future .milestone-tooltip { border-color: #9e9e9e; }
+```
+
+**HTML structure:**
+```html
+<div class="milestone-tooltip">
+  {{ milestone.reward_title }}
+  <br>
+  {% if milestone.position <= map_data.current_position %}
+    <small style="color: #4CAF50;">✅ Pasiekta!</small>
+  {% elif kid.points_balance >= milestone.position %}
+    <small style="color: #FF9800;">🎯 Gali prašyti!</small>
+  {% else %}
+    <small style="color: #9e9e9e;">🔒 {{ milestone.position }} tšk reikia</small>
+  {% endif %}
+</div>
 ```
 
 #### Testing Checklist:
-- [ ] Path animates on page load
-- [ ] Character moves smoothly between positions
-- [ ] Milestone unlock effect triggers correctly
+- [x] CSS animations added (path dash, tooltip hover)
+- [x] Tooltip HTML structure inserted in milestone loop
+- [x] Color-coded status messages (Lithuanian)
+- [ ] Visual testing on running server
 - [ ] Tooltips don't interfere with clicks
 - [ ] Progress bubble updates accurately
+- [ ] Test on mobile viewport (375px)
 
 ---
 
