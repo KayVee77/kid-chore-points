@@ -238,6 +238,14 @@ class Redemption(models.Model):
             self.save(update_fields=["status", "processed_at"])
         return True
 
+    def reject(self):
+        if self.status != self.Status.PENDING:
+            return False
+        self.status = self.Status.REJECTED
+        self.processed_at = timezone.now()
+        self.save(update_fields=["status", "processed_at"])
+        return True
+
 
 class PointAdjustment(models.Model):
     parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="point_adjustments")
@@ -252,16 +260,11 @@ class PointAdjustment(models.Model):
         if is_new:
             # apply adjustment after creation to have record even if update fails
             self.kid.points_balance += self.points
-            self.kid.save(update_fields=["points_balance"])
+            # Also update map_position for positive adjustments
+            if self.points > 0:
+                self.kid.map_position += self.points
+            self.kid.save(update_fields=["points_balance", "map_position"])
 
     def __str__(self):
         sign = '+' if self.points >= 0 else ''
         return f"Adj {sign}{self.points} for {self.kid.name}"
-
-    def reject(self):
-        if self.status != self.Status.PENDING:
-            return False
-        self.status = self.Status.REJECTED
-        self.processed_at = timezone.now()
-        self.save(update_fields=["status", "processed_at"])
-        return True
