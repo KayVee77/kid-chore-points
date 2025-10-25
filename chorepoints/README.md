@@ -9,6 +9,8 @@
 
 ## 🚀 Greitas paleidimas (Rekomenduojama)
 
+### Pirmą kartą arba po pakeitimų:
+
 ```powershell
 cd chorepoints
 ./dev.ps1
@@ -21,11 +23,24 @@ Skriptas automatiškai:
 4. Atidaro naršyklę http://127.0.0.1:8000/
 5. Startuoja Django serverį (nutraukimas `CTRL+C`)
 
+### Kasdienis greitas paleidimas:
+
+```powershell
+cd chorepoints
+./run.ps1
+```
+
+Skriptas tik:
+1. Aktyvuoja esamą `.venv`
+2. Atidaro naršyklę
+3. Startuoja Django serverį
+
 **Papildomos parinktys:**
 
 ```powershell
 ./dev.ps1 -Reset      # iš naujo kuria venv
 ./dev.ps1 -Port 8010  # startuoja kitu portu
+./run.ps1 -Port 8010  # greitas startas kitu portu
 ```
 
 ## 🔧 Rankinis paleidimas (jei nenaudojate skripto)
