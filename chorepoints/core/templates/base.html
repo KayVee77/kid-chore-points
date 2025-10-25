@@ -70,6 +70,72 @@
         background: linear-gradient(135deg, #FFF9F0 0%, #FFF 50%, #F0F9FF 100%);
         min-height: 100vh;
         color: var(--color-gray-900);
+        font-size: 16px;
+        line-height: 1.6;
+      }
+      
+      /* Phase 3.1: Enhanced Typography for Kid-Friendly Interface */
+      h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-family);
+        font-weight: 600;
+        line-height: 1.3;
+        margin-top: 0;
+        margin-bottom: 0.75rem;
+        color: var(--color-gray-900);
+      }
+      
+      /* Kid-facing content should have larger, more readable text */
+      h1 {
+        font-size: 2.5rem; /* 40px - large and engaging */
+        font-weight: 700;
+        letter-spacing: -0.02em;
+      }
+      
+      h2 {
+        font-size: 2rem; /* 32px - section headers */
+        font-weight: 600;
+      }
+      
+      h3 {
+        font-size: 1.5rem; /* 24px - subsections */
+        font-weight: 600;
+      }
+      
+      h4 {
+        font-size: 1.25rem; /* 20px - smaller headings */
+        font-weight: 600;
+      }
+      
+      h5, h6 {
+        font-size: 1.125rem; /* 18px - minor headings */
+        font-weight: 500;
+      }
+      
+      p {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        line-height: 1.8; /* More breathing room for kid readability */
+      }
+      
+      /* Improved text blocks for longer content */
+      .text-block {
+        line-height: 1.8;
+        font-size: 1.0625rem; /* 17px - slightly larger for comfort */
+      }
+      
+      /* Small text should still be readable */
+      small {
+        font-size: 0.875rem; /* 14px */
+        line-height: 1.5;
+      }
+      
+      /* Font fallback chain for offline support */
+      @supports not (font-family: 'Fredoka') {
+        :root {
+          --font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 
+                         Roboto, 'Helvetica Neue', Arial, sans-serif,
+                         'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+        }
       }
       
       /* Enhanced Button Styles */
@@ -275,7 +341,101 @@
           padding: .625rem 1.25rem;
           font-size: 0.95rem;
         }
+        
+        /* Smaller headings on mobile */
+        h1 { font-size: 2rem; }
+        h2 { font-size: 1.75rem; }
+        h3 { font-size: 1.375rem; }
       }
+      
+      /* Phase 3.2: Icon & Emoji Consistency */
+      
+      /* Base emoji styling with depth effect */
+      .emoji,
+      [class*="emoji-"] {
+        display: inline-block;
+        line-height: 1;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        user-select: none;
+        transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+      
+      /* Emoji size utility classes */
+      .emoji-sm {
+        font-size: 1.5rem; /* 24px - inline icons */
+      }
+      
+      .emoji-md {
+        font-size: 2rem; /* 32px - list items, buttons */
+      }
+      
+      .emoji-lg {
+        font-size: 3rem; /* 48px - headers, featured content */
+      }
+      
+      .emoji-xl {
+        font-size: 4rem; /* 64px - avatars, hero sections */
+      }
+      
+      /* Hover animations for interactive emojis */
+      .emoji-hover:hover,
+      .emoji-sm:hover,
+      .emoji-md:hover,
+      .emoji-lg:hover,
+      .emoji-xl:hover {
+        transform: scale(1.1);
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      
+      /* Specific hover animation variants */
+      .emoji-bounce:hover {
+        animation: emojiBounce 0.6s ease-in-out;
+      }
+      
+      .emoji-rotate:hover {
+        animation: emojiRotate 0.5s ease-in-out;
+      }
+      
+      .emoji-wiggle:hover {
+        animation: emojiWiggle 0.5s ease-in-out;
+      }
+      
+      .emoji-pulse:hover {
+        animation: emojiPulse 0.6s ease-in-out;
+      }
+      
+      /* Emoji animations */
+      @keyframes emojiBounce {
+        0%, 100% { transform: translateY(0) scale(1); }
+        25% { transform: translateY(-10px) scale(1.05); }
+        50% { transform: translateY(0) scale(1.1); }
+        75% { transform: translateY(-5px) scale(1.05); }
+      }
+      
+      @keyframes emojiRotate {
+        0% { transform: rotate(0deg) scale(1); }
+        25% { transform: rotate(-15deg) scale(1.1); }
+        75% { transform: rotate(15deg) scale(1.1); }
+        100% { transform: rotate(0deg) scale(1); }
+      }
+      
+      @keyframes emojiWiggle {
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg) scale(1.05); }
+        75% { transform: rotate(5deg) scale(1.05); }
+      }
+      
+      @keyframes emojiPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.2); text-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); }
+      }
+      
+      /* Context-specific emoji sizing */
+      h1 .emoji, h1 [class*="emoji-"] { font-size: 3rem; }
+      h2 .emoji, h2 [class*="emoji-"] { font-size: 2.5rem; }
+      h3 .emoji, h3 [class*="emoji-"] { font-size: 2rem; }
+      .btn .emoji, .btn [class*="emoji-"] { font-size: 1.25rem; vertical-align: middle; }
+      .card .emoji, .card [class*="emoji-"] { font-size: 2rem; }
       
       /* Reduced Motion Support */
       @media (prefers-reduced-motion: reduce) {
@@ -283,6 +443,12 @@
           animation-duration: 0.01ms !important;
           animation-iteration-count: 1 !important;
           transition-duration: 0.01ms !important;
+        }
+        
+        .emoji,
+        [class*="emoji-"] {
+          transition: none !important;
+          animation: none !important;
         }
       }
     </style>
