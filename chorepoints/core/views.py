@@ -78,6 +78,8 @@ def kid_home(request):
     # Recent approved history (limit 10 each)
     approved_logs = kid.chore_logs.filter(status=ChoreLog.Status.APPROVED).order_by('-processed_at')[:10]
     approved_redemptions = kid.redemptions.filter(status=Redemption.Status.APPROVED).order_by('-processed_at')[:10]
+    # Adventure Map progress data
+    map_data = kid.get_map_progress()
     return render(
         request,
         "kid/home.html",
@@ -94,6 +96,7 @@ def kid_home(request):
             "pending_reward_ids": pending_reward_ids,
             "approved_logs": approved_logs,
             "approved_redemptions": approved_redemptions,
+            "map_data": map_data,
         },
     )
 
