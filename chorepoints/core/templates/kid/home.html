@@ -1355,33 +1355,134 @@
   <canvas id="confetti-canvas" style="position:fixed; inset:0; width:100%; height:100%; pointer-events:none; display:none;"></canvas>
   <script>
     (function(){
-  const approvedNew = JSON.parse('{{ approved_new|yesno:"true,false" }}');
+      const approvedNew = JSON.parse('{{ approved_new|yesno:"true,false" }}');
       if(!approvedNew) return;
+      
       const c = document.getElementById('confetti-canvas');
       c.style.display='block';
       const ctx = c.getContext('2d');
-      function resize(){c.width=window.innerWidth; c.height=window.innerHeight;} resize(); window.addEventListener('resize',resize);
-      const pieces = Array.from({length:160},()=>({
+      
+      function resize(){c.width=window.innerWidth; c.height=window.innerHeight;} 
+      resize(); 
+      window.addEventListener('resize',resize);
+      
+      // Enhanced color palette - vibrant, kid-friendly colors
+      const colors = [
+        '#FF6B6B', // Red
+        '#FF8E53', // Orange
+        '#FFD93D', // Yellow
+        '#6BCF7F', // Green
+        '#4D96FF', // Blue
+        '#9D6CFF', // Purple
+        '#FF6BCB', // Pink
+        '#45B7D1', // Cyan
+        '#FFA07A', // Light coral
+        '#98D8C8'  // Mint
+      ];
+      
+      // Shape types: 'circle', 'square', 'star'
+      const shapes = ['circle', 'square', 'star', 'circle', 'square']; // More circles for balance
+      
+      // Create 200 confetti pieces with variety
+      const pieces = Array.from({length:200},()=>({
         x: Math.random()*c.width,
-        y: Math.random()*-c.height,
-        r: 6+Math.random()*6,
-        d: 4+Math.random()*4,
-        c: `hsl(${Math.random()*360},80%,60%)`,
+        y: Math.random()*-c.height - 100, // Start higher for more staggered effect
+        r: 4+Math.random()*8, // Size: 4-12px
+        d: 2+Math.random()*4, // Fall speed: 2-6px per frame
+        c: colors[Math.floor(Math.random()*colors.length)], // Pick from palette
+        shape: shapes[Math.floor(Math.random()*shapes.length)], // Random shape
+        rotation: Math.random()*Math.PI*2, // Initial rotation
+        rotationSpeed: (Math.random()-0.5)*0.15, // Rotation speed
         tilt: Math.random()*10,
-        tiltDir: Math.random()<.5?-1:1
+        tiltDir: Math.random()<.5?-1:1,
+        opacity: 0.8 + Math.random()*0.2 // Slight opacity variation
       }));
-      let frame=0; const maxFrames=320; function draw(){
-        ctx.clearRect(0,0,c.width,c.height);
-        pieces.forEach(p=>{
-          ctx.beginPath();
-            ctx.fillStyle=p.c;
-            ctx.ellipse(p.x,p.y,p.r/2,p.r,Math.PI/4,0,Math.PI*2);
-            ctx.fill();
-            p.y += p.d; p.x += Math.sin((frame+p.y)/25); p.tilt += p.tiltDir*0.5;
-            if(p.y>c.height) {p.y=-20; p.x=Math.random()*c.width;}
-        });
-        frame++; if(frame<maxFrames) requestAnimationFrame(draw); else setTimeout(()=>{c.style.opacity='0'; setTimeout(()=>c.remove(),600);},800);
+      
+      let frame=0; 
+      const maxFrames=380; // Slightly longer animation (was 320)
+      
+      // Helper function to draw a star
+      function drawStar(ctx, cx, cy, spikes, outerRadius, innerRadius) {
+        let rot = Math.PI / 2 * 3;
+        let x = cx;
+        let y = cy;
+        const step = Math.PI / spikes;
+        
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - outerRadius);
+        for (let i = 0; i < spikes; i++) {
+          x = cx + Math.cos(rot) * outerRadius;
+          y = cy + Math.sin(rot) * outerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+          
+          x = cx + Math.cos(rot) * innerRadius;
+          y = cy + Math.sin(rot) * innerRadius;
+          ctx.lineTo(x, y);
+          rot += step;
+        }
+        ctx.lineTo(cx, cy - outerRadius);
+        ctx.closePath();
+        ctx.fill();
       }
+      
+      function draw(){
+        ctx.clearRect(0,0,c.width,c.height);
+        
+        pieces.forEach(p=>{
+          ctx.save();
+          ctx.globalAlpha = p.opacity;
+          ctx.fillStyle = p.c;
+          
+          // Apply rotation
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rotation);
+          
+          // Draw based on shape
+          if (p.shape === 'circle') {
+            ctx.beginPath();
+            ctx.arc(0, 0, p.r, 0, Math.PI*2);
+            ctx.fill();
+          } else if (p.shape === 'square') {
+            ctx.fillRect(-p.r, -p.r, p.r*2, p.r*2);
+          } else if (p.shape === 'star') {
+            drawStar(ctx, 0, 0, 5, p.r, p.r*0.5);
+          }
+          
+          ctx.restore();
+          
+          // Update position and rotation
+          p.y += p.d; 
+          p.x += Math.sin((frame+p.y)/30)*0.5; // Gentler horizontal sway
+          p.rotation += p.rotationSpeed;
+          p.tilt += p.tiltDir*0.5;
+          
+          // Fade out as it falls
+          if (p.y > c.height * 0.8) {
+            p.opacity = Math.max(0, p.opacity - 0.02);
+          }
+          
+          // Recycle pieces that fall off screen
+          if(p.y > c.height + 20) {
+            p.y = -20; 
+            p.x = Math.random()*c.width;
+            p.opacity = 0.8 + Math.random()*0.2;
+          }
+        });
+        
+        frame++; 
+        if(frame < maxFrames) {
+          requestAnimationFrame(draw);
+        } else {
+          // Fade out animation
+          setTimeout(()=>{
+            c.style.transition = 'opacity 0.6s';
+            c.style.opacity='0'; 
+            setTimeout(()=>c.remove(), 600);
+          }, 800);
+        }
+      }
+      
       requestAnimationFrame(draw);
     })();
   </script>
