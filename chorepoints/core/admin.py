@@ -3,9 +3,15 @@ from .models import Kid, Chore, Reward, ChoreLog, Redemption, PointAdjustment
 
 @admin.register(Kid)
 class KidAdmin(admin.ModelAdmin):
-    list_display = ("name", "parent", "points_balance", "active", "created_at")
-    list_filter = ("active", "parent")
+    list_display = ("name", "parent", "points_balance", "map_position", "map_theme", "active", "created_at")
+    list_filter = ("active", "parent", "map_theme")
     search_fields = ("name", "parent__username")
+    actions = ["reset_map_position"]
+    
+    def reset_map_position(self, request, queryset):
+        count = queryset.update(map_position=0)
+        self.message_user(request, f"Atstatyta {count} vaikų žemėlapio pozicija į 0.")
+    reset_map_position.short_description = "Atstatyti žemėlapio poziciją (0)"
 
 @admin.register(Chore)
 class ChoreAdmin(admin.ModelAdmin):

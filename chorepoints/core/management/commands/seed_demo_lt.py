@@ -2,7 +2,10 @@ from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from core.models import Kid, Chore, Reward
 
-KIDS = ["Elija", "Agota"]
+KIDS = [
+    ("Elija", "ISLAND"),
+    ("Agota", "SPACE"),
+]
 PIN = "1234"
 CHORES = [
     ("Išnešti šiukšles", 2, "🗑️"),
@@ -31,13 +34,18 @@ class Command(BaseCommand):
             raise CommandError("Parent user not found. Create superuser first.")
 
         # Kids
-        for name in KIDS:
-            kid, created = Kid.objects.get_or_create(parent=parent, name=name, defaults={'pin': PIN})
+        for name, theme in KIDS:
+            kid, created = Kid.objects.get_or_create(
+                parent=parent, 
+                name=name, 
+                defaults={'pin': PIN, 'map_theme': theme}
+            )
             if not created:
                 kid.pin = PIN
                 kid.active = True
-                kid.save(update_fields=['pin','active'])
-            self.stdout.write(self.style.SUCCESS(f"Kid ready: {kid.name} (PIN {PIN})"))
+                kid.map_theme = theme
+                kid.save(update_fields=['pin', 'active', 'map_theme'])
+            self.stdout.write(self.style.SUCCESS(f"Kid ready: {kid.name} (PIN {PIN}, Theme: {theme})"))
 
         # Chores
         for title, points, emoji in CHORES:

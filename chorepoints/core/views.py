@@ -81,6 +81,7 @@ def kid_home(request):
     last_seen_map_position = request.session.get("last_seen_map_position", 0)
     milestone_unlocked = kid.map_position > last_seen_map_position
     newly_unlocked_milestones = []
+    old_map_position = last_seen_map_position  # Store for animation
     if milestone_unlocked:
         # Find which milestones were just unlocked
         map_data_temp = kid.get_map_progress()
@@ -90,11 +91,40 @@ def kid_home(request):
     # Update last seen map position
     request.session["last_seen_map_position"] = kid.map_position
     
+    # Track newly affordable rewards (treasure unlock effect)
+    last_seen_balance = request.session.get("last_seen_balance", 0)
+    newly_affordable_reward_ids = []
+    if kid.points_balance > last_seen_balance:
+        # Find rewards that just became affordable
+        for reward in rewards:
+            if last_seen_balance < reward.cost_points <= kid.points_balance:
+                newly_affordable_reward_ids.append(reward.id)
+    request.session["last_seen_balance"] = kid.points_balance
+    
     # Recent approved history (limit 10 each)
     approved_logs = kid.chore_logs.filter(status=ChoreLog.Status.APPROVED).order_by('-processed_at')[:10]
     approved_redemptions = kid.redemptions.filter(status=Redemption.Status.APPROVED).order_by('-processed_at')[:10]
     # Adventure Map progress data
     map_data = kid.get_map_progress()
+    
+    # Calculate old progress percentage for movement animation
+    old_progress_percentage = 0
+    if milestone_unlocked and map_data['milestones']:
+        # Calculate where the kid was before
+        next_milestone_pos = None
+        prev_milestone_pos = 0
+        for milestone in map_data['milestones']:
+            if milestone['position'] > old_map_position:
+                next_milestone_pos = milestone['position']
+                break
+            prev_milestone_pos = milestone['position']
+        
+        if next_milestone_pos:
+            segment_length = next_milestone_pos - prev_milestone_pos
+            progress_in_segment = old_map_position - prev_milestone_pos
+            if segment_length > 0:
+                old_progress_percentage = min(100, int((progress_in_segment / segment_length) * 100))
+    
     return render(
         request,
         "kid/home.html",
@@ -115,6 +145,9 @@ def kid_home(request):
             "milestone_unlocked": milestone_unlocked,
             "newly_unlocked_milestones": newly_unlocked_milestones,
             "newly_unlocked_milestones_json": json.dumps(newly_unlocked_milestones),
+            "old_map_position": old_map_position,
+            "old_progress_percentage": old_progress_percentage,
+            "newly_affordable_reward_ids": newly_affordable_reward_ids,
         },
     )
 

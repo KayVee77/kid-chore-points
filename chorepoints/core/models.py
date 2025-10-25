@@ -11,6 +11,11 @@ except ImportError:  # Pillow should be installed; safeguard
 User = get_user_model()
 
 class Kid(models.Model):
+    class MapTheme(models.TextChoices):
+        ISLAND = "ISLAND", "Island"
+        SPACE = "SPACE", "Space"
+        RAINBOW = "RAINBOW", "Rainbow Road"
+    
     parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="kids")
     name = models.CharField(max_length=100)
     pin = models.CharField(max_length=20)  # Plaintext (MVP only)
@@ -20,6 +25,7 @@ class Kid(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     avatar_emoji = models.CharField(max_length=4, blank=True, default="", help_text="Emoji (jei tuščia – generuojama raidė)")
     photo = models.ImageField(upload_to="kid_avatars/", null=True, blank=True, help_text="Nuotrauka (jei nenaudojamas emoji)")
+    map_theme = models.CharField(max_length=10, choices=MapTheme.choices, default=MapTheme.ISLAND, help_text="Nuotykių žemėlapio tema")
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -50,11 +56,21 @@ class Kid(models.Model):
         
         milestones = []
         for reward in rewards:
+            # Determine accessibility status
+            if reward.cost_points <= self.map_position:
+                aria_status = "pasiekta"  # achieved
+            elif self.points_balance >= reward.cost_points:
+                aria_status = "galima prašyti"  # can request
+            else:
+                points_needed_for_aria = reward.cost_points - self.points_balance
+                aria_status = f"dar reikia {points_needed_for_aria} taškų"  # still need X points
+            
             milestones.append({
                 'position': reward.cost_points,
                 'reward_id': reward.id,
                 'reward_title': reward.title,
                 'reward_icon': reward.display_icon,
+                'aria_label': f"{reward.title}, {reward.cost_points} taškai, {aria_status}",
             })
         
         # Find next reward position
