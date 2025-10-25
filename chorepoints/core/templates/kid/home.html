@@ -1404,6 +1404,172 @@
       transform: scale(1) rotate(0deg);
     }
   }
+  
+  /* Achievement Badge System */
+  .achievement-badges {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 0.75rem;
+  }
+  
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.875rem;
+    border-radius: 12px;
+    font-size: 0.875rem;
+    font-weight: 700;
+    box-shadow: 0 4px 8px rgba(0,0,0,.15);
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .badge:hover {
+    transform: translateY(-2px) scale(1.05);
+    box-shadow: 0 6px 16px rgba(0,0,0,.25);
+  }
+  
+  .badge-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,.2));
+  }
+  
+  .badge-label {
+    white-space: nowrap;
+  }
+  
+  /* Badge variants */
+  .badge-unlocked {
+    background: linear-gradient(135deg, #FFE082 0%, #FFD54F 100%);
+    color: #F57F17;
+    border: 2px solid #FFF59D;
+  }
+  
+  .badge-locked {
+    background: linear-gradient(135deg, #E0E0E0 0%, #BDBDBD 100%);
+    color: #757575;
+    border: 2px solid #EEEEEE;
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  .badge-locked .badge-icon {
+    filter: grayscale(100%);
+  }
+  
+  /* Badge unlock animation */
+  .badge-unlock-anim {
+    animation: badgeUnlock 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  
+  @keyframes badgeUnlock {
+    0% {
+      opacity: 0;
+      transform: scale(0) rotate(-180deg);
+    }
+    60% {
+      transform: scale(1.2) rotate(10deg);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1) rotate(0deg);
+    }
+  }
+  
+  /* Shine effect for unlocked badges */
+  .badge-unlocked::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 0%,
+      transparent 40%,
+      rgba(255, 255, 255, 0.6) 50%,
+      transparent 60%,
+      transparent 100%
+    );
+    animation: badgeShine 3s ease-in-out infinite;
+  }
+  
+  @keyframes badgeShine {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+  
+  /* Badge glow pulse for newly unlocked */
+  .badge-newly-unlocked {
+    animation: badgeGlow 1.5s ease-in-out 3;
+  }
+  
+  @keyframes badgeGlow {
+    0%, 100% {
+      box-shadow: 0 4px 8px rgba(0,0,0,.15);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(255, 193, 7, .8), 0 4px 8px rgba(0,0,0,.15);
+    }
+  }
+  
+  /* Badge categories with different colors */
+  .badge-chores.badge-unlocked {
+    background: linear-gradient(135deg, #C8E6C9 0%, #A5D6A7 100%);
+    color: #2E7D32;
+    border-color: #C5E1A5;
+  }
+  
+  .badge-points.badge-unlocked {
+    background: linear-gradient(135deg, #FFE082 0%, #FFD54F 100%);
+    color: #F57F17;
+    border-color: #FFF59D;
+  }
+  
+  .badge-master.badge-unlocked {
+    background: linear-gradient(135deg, #E1BEE7 0%, #CE93D8 100%);
+    color: #6A1B9A;
+    border-color: #F3E5F5;
+  }
+  
+  /* Badge section header */
+  .badges-header {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-gray-700);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .badges-header-icon {
+    font-size: 1.25rem;
+  }
+  
+  /* Mobile responsive */
+  @media (max-width: 768px) {
+    .achievement-badges {
+      gap: 0.375rem;
+    }
+    .badge {
+      padding: 0.375rem 0.625rem;
+      font-size: 0.75rem;
+    }
+    .badge-icon {
+      font-size: 1.25rem;
+    }
+  }
   </style>
   
   <div class="header-section">
@@ -1426,6 +1592,17 @@
           <div class="small" style="text-align:right; margin-top: .25rem; font-weight: 600;">{{ progress_percent }}%</div>
         </div>
       {% endif %}
+      
+      {# Achievement Badges Section #}
+      <div id="achievement-badges-container">
+        <div class="badges-header">
+          <span class="badges-header-icon">🏆</span>
+          <span>Pasiekimai</span>
+        </div>
+        <div class="achievement-badges" id="achievement-badges">
+          {# Badges will be populated by JavaScript #}
+        </div>
+      </div>
     </div>
   </div>
 
@@ -2078,6 +2255,224 @@
       }
       
       requestAnimationFrame(draw);
+    })();
+  </script>
+  
+  {# Achievement Badge System JavaScript #}
+  <script>
+    (function() {
+      // Badge definitions with thresholds
+      const badgeDefinitions = [
+        {
+          id: 'first-steps',
+          icon: '🌟',
+          label: 'Pirmi Žingsniai',
+          category: 'chores',
+          threshold: 1,
+          checkFn: (stats) => stats.approvedChores >= 1
+        },
+        {
+          id: 'getting-started',
+          icon: '⭐',
+          label: 'Pradedantysis',
+          category: 'chores',
+          threshold: 5,
+          checkFn: (stats) => stats.approvedChores >= 5
+        },
+        {
+          id: 'super-helper',
+          icon: '🌠',
+          label: 'Super Pagalbininkas',
+          category: 'chores',
+          threshold: 10,
+          checkFn: (stats) => stats.approvedChores >= 10
+        },
+        {
+          id: 'chore-champion',
+          icon: '🏆',
+          label: 'Darbų Čempionas',
+          category: 'chores',
+          threshold: 25,
+          checkFn: (stats) => stats.approvedChores >= 25
+        },
+        {
+          id: 'chore-legend',
+          icon: '👑',
+          label: 'Darbų Legenda',
+          category: 'chores',
+          threshold: 50,
+          checkFn: (stats) => stats.approvedChores >= 50
+        },
+        {
+          id: 'point-collector',
+          icon: '💰',
+          label: 'Taškų Rinkėjas',
+          category: 'points',
+          threshold: 50,
+          checkFn: (stats) => stats.currentPoints >= 50
+        },
+        {
+          id: 'points-master',
+          icon: '💎',
+          label: 'Taškų Meistras',
+          category: 'points',
+          threshold: 100,
+          checkFn: (stats) => stats.currentPoints >= 100
+        },
+        {
+          id: 'treasure-hunter',
+          icon: '🗺️',
+          label: 'Lobių Medžiotojas',
+          category: 'master',
+          threshold: 3,
+          checkFn: (stats) => stats.mapPosition >= 3
+        }
+      ];
+      
+      // Get stats from the page
+      const stats = {
+        approvedChores: {{ approved_logs.count }},
+        currentPoints: {{ kid.points_balance }},
+        mapPosition: {{ kid.map_position }},
+        approvedRedemptions: {{ approved_redemptions.count }}
+      };
+      
+      // Track newly unlocked badges for animation
+      const lastSeenBadges = JSON.parse(sessionStorage.getItem('lastSeenBadges') || '[]');
+      const currentUnlockedBadges = [];
+      
+      // Calculate which badges are unlocked
+      const container = document.getElementById('achievement-badges');
+      if (!container) return;
+      
+      badgeDefinitions.forEach(badge => {
+        const isUnlocked = badge.checkFn(stats);
+        if (isUnlocked) {
+          currentUnlockedBadges.push(badge.id);
+        }
+        
+        const isNewlyUnlocked = isUnlocked && !lastSeenBadges.includes(badge.id);
+        
+        const badgeEl = document.createElement('div');
+        badgeEl.className = `badge badge-${badge.category} ${isUnlocked ? 'badge-unlocked' : 'badge-locked'}`;
+        badgeEl.title = isUnlocked 
+          ? `Atrakinta! ${badge.label}` 
+          : `Užrakinta (reikia: ${badge.threshold})`;
+        
+        badgeEl.innerHTML = `
+          <span class="badge-icon">${badge.icon}</span>
+          <span class="badge-label">${badge.label}</span>
+        `;
+        
+        // Add unlock animation for newly unlocked badges
+        if (isNewlyUnlocked) {
+          badgeEl.classList.add('badge-unlock-anim', 'badge-newly-unlocked');
+          
+          // Trigger confetti for first badge unlock
+          if (currentUnlockedBadges.length === 1) {
+            setTimeout(() => {
+              // Mini confetti burst
+              triggerBadgeConfetti();
+            }, 400);
+          }
+        }
+        
+        container.appendChild(badgeEl);
+      });
+      
+      // Update session storage with current unlocked badges
+      sessionStorage.setItem('lastSeenBadges', JSON.stringify(currentUnlockedBadges));
+      
+      // Badge unlock confetti (smaller, centered burst)
+      function triggerBadgeConfetti() {
+        const c = document.createElement('canvas');
+        c.style.position = 'fixed';
+        c.style.top = '0';
+        c.style.left = '0';
+        c.style.width = '100%';
+        c.style.height = '100%';
+        c.style.pointerEvents = 'none';
+        c.style.zIndex = '9998';
+        c.width = window.innerWidth;
+        c.height = window.innerHeight;
+        document.body.appendChild(c);
+        
+        const ctx = c.getContext('2d');
+        const particles = [];
+        const colors = ['#FFD700', '#FFA500', '#FF6347', '#32CD32', '#1E90FF', '#9370DB'];
+        const particleCount = 60; // Smaller burst
+        
+        // Create particles from badge area
+        const badgeContainer = document.getElementById('achievement-badges-container');
+        const rect = badgeContainer ? badgeContainer.getBoundingClientRect() : { left: window.innerWidth/2, top: 200 };
+        
+        for (let i = 0; i < particleCount; i++) {
+          particles.push({
+            x: rect.left + (badgeContainer ? badgeContainer.offsetWidth/2 : 0),
+            y: rect.top,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8 - 4,
+            size: 6 + Math.random() * 6,
+            color: colors[Math.floor(Math.random() * colors.length)],
+            rotation: Math.random() * 360,
+            rotationSpeed: (Math.random() - 0.5) * 10,
+            opacity: 1,
+            shape: Math.random() > 0.5 ? 'circle' : 'star'
+          });
+        }
+        
+        let frame = 0;
+        const maxFrames = 120;
+        
+        function draw() {
+          ctx.clearRect(0, 0, c.width, c.height);
+          
+          particles.forEach(p => {
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.3; // gravity
+            p.rotation += p.rotationSpeed;
+            p.opacity = Math.max(0, 1 - (frame / maxFrames));
+            
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation * Math.PI / 180);
+            ctx.globalAlpha = p.opacity;
+            ctx.fillStyle = p.color;
+            
+            if (p.shape === 'circle') {
+              ctx.beginPath();
+              ctx.arc(0, 0, p.size, 0, Math.PI * 2);
+              ctx.fill();
+            } else {
+              // Draw star
+              ctx.beginPath();
+              for (let i = 0; i < 5; i++) {
+                const angle = (i * 4 * Math.PI) / 5 - Math.PI / 2;
+                const x = Math.cos(angle) * p.size;
+                const y = Math.sin(angle) * p.size;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+              }
+              ctx.closePath();
+              ctx.fill();
+            }
+            
+            ctx.restore();
+          });
+          
+          frame++;
+          if (frame < maxFrames) {
+            requestAnimationFrame(draw);
+          } else {
+            c.style.transition = 'opacity 0.4s';
+            c.style.opacity = '0';
+            setTimeout(() => c.remove(), 400);
+          }
+        }
+        
+        requestAnimationFrame(draw);
+      }
     })();
   </script>
 {% endblock %}
