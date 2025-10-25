@@ -434,106 +434,463 @@
     overflow: hidden;
   }
   
-  /* Theme: Island (default) */
+  /* Theme: Island (default) - Enhanced with waves, palm shadows, sand texture */
   .adventure-map.theme-island {
-    background: linear-gradient(135deg, #e3f2fd 0%, #fff9c4 100%);
+    background: 
+      /* Animated wave layer */
+      linear-gradient(135deg, transparent 0%, transparent 40%, rgba(3,169,244,.15) 100%),
+      /* Sandy beach gradient */
+      linear-gradient(135deg, #87ceeb 0%, #f4e4c1 50%, #daa520 100%);
+    background-size: 200% 200%, 100% 100%;
+    animation: islandWaves 8s ease-in-out infinite;
+    position: relative;
   }
+  
+  /* Animated wave effect */
+  @keyframes islandWaves {
+    0%, 100% { 
+      background-position: 0% 0%, 0% 0%; 
+    }
+    50% { 
+      background-position: 100% 100%, 0% 0%; 
+    }
+  }
+  
+  /* Sun with glow effect */
   .adventure-map.theme-island:before {
-    content: "";
+    content: "☀️";
     position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(255,235,59,.3) 0%, transparent 70%);
+    top: 5%;
+    right: 8%;
+    font-size: 3.5rem;
+    filter: drop-shadow(0 0 20px rgba(255,235,59,.8));
+    animation: islandSunGlow 4s ease-in-out infinite;
     pointer-events: none;
+    z-index: 1;
   }
+  
+  @keyframes islandSunGlow {
+    0%, 100% { 
+      filter: drop-shadow(0 0 20px rgba(255,235,59,.8));
+      transform: scale(1);
+    }
+    50% { 
+      filter: drop-shadow(0 0 35px rgba(255,235,59,1));
+      transform: scale(1.05);
+    }
+  }
+  
+  /* Palm tree shadows with sway animation */
+  .adventure-map.theme-island:after {
+    content: "🌴 🌴";
+    position: absolute;
+    bottom: 10%;
+    left: 5%;
+    font-size: 2.5rem;
+    filter: drop-shadow(3px 3px 8px rgba(0,0,0,.3));
+    animation: palmSway 3s ease-in-out infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  @keyframes palmSway {
+    0%, 100% { 
+      transform: rotate(0deg);
+      filter: drop-shadow(3px 3px 8px rgba(0,0,0,.3));
+    }
+    25% { 
+      transform: rotate(-2deg);
+      filter: drop-shadow(1px 4px 8px rgba(0,0,0,.35));
+    }
+    75% { 
+      transform: rotate(2deg);
+      filter: drop-shadow(5px 2px 8px rgba(0,0,0,.35));
+    }
+  }
+  
+  /* Island-themed path with tropical colors */
   .adventure-map.theme-island .map-path:before {
     background: linear-gradient(90deg, 
-      #4caf50 0%, 
-      #8bc34a 25%, 
-      #ffeb3b 50%, 
-      #ff9800 75%, 
-      #f44336 100%
+      #4caf50 0%,  /* Tropical green */
+      #8bc34a 25%, /* Lime */
+      #ffeb3b 50%, /* Sunshine yellow */
+      #ff9800 75%, /* Orange sunset */
+      #f44336 100% /* Red hibiscus */
     );
+    filter: drop-shadow(0 2px 4px rgba(76,175,80,.4));
   }
   
-  /* Theme: Space */
+  /* Sand texture overlay using subtle pattern */
+  .adventure-map.theme-island .milestone {
+    background: rgba(255,255,255,.85);
+    box-shadow: 
+      0 4px 12px rgba(0,0,0,.15),
+      inset 0 1px 3px rgba(218,165,32,.2);
+  }
+  
+  /* Beach-themed milestone colors */
+  .adventure-map.theme-island .milestone.completed {
+    background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+    box-shadow: 0 6px 20px rgba(76,175,80,.4);
+  }
+  
+  .adventure-map.theme-island .milestone.current {
+    background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+    box-shadow: 0 6px 20px rgba(255,152,0,.5);
+    animation: beachPulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes beachPulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 6px 20px rgba(255,152,0,.5);
+    }
+    50% { 
+      transform: scale(1.08);
+      box-shadow: 0 8px 30px rgba(255,152,0,.7);
+    }
+  }
+  
+  
+  /* Theme: Space - Enhanced with animated stars, planets, nebula */
   .adventure-map.theme-space {
-    background: linear-gradient(135deg, #0d1117 0%, #1a1f35 50%, #2d1b69 100%);
+    background: 
+      /* Nebula glow overlay */
+      radial-gradient(ellipse at 20% 30%, rgba(156,39,176,.3) 0%, transparent 40%),
+      radial-gradient(ellipse at 80% 70%, rgba(33,150,243,.25) 0%, transparent 40%),
+      /* Deep space gradient */
+      linear-gradient(135deg, #0a0e27 0%, #1a1f4a 50%, #2d1b69 100%);
+    position: relative;
+    overflow: hidden;
   }
+  
+  /* Animated twinkling stars */
   .adventure-map.theme-space:before {
-    content: "✨ ⭐ 🌟 ☄️ 🪐";
+    content: "✨ ⭐ 🌟 💫 ✨ ⭐ 🌟 ⭐ ✨";
     position: absolute;
-    top: 10%;
-    left: 5%;
-    right: 5%;
-    font-size: 2rem;
-    opacity: .3;
-    letter-spacing: 3rem;
+    top: 8%;
+    left: 0;
+    right: 0;
+    font-size: 1.8rem;
+    opacity: .4;
+    letter-spacing: 4rem;
     pointer-events: none;
-    animation: twinkle 3s ease-in-out infinite;
+    animation: starTwinkle 4s ease-in-out infinite;
+    z-index: 1;
   }
+  
+  @keyframes starTwinkle {
+    0%, 100% { 
+      opacity: .3;
+      transform: scale(1);
+    }
+    25% { 
+      opacity: .6;
+      transform: scale(1.05);
+    }
+    50% { 
+      opacity: .4;
+      transform: scale(1.02);
+    }
+    75% { 
+      opacity: .7;
+      transform: scale(1.08);
+    }
+  }
+  
+  /* Orbiting planets */
+  .adventure-map.theme-space:after {
+    content: "🪐 🌍";
+    position: absolute;
+    bottom: 15%;
+    right: 10%;
+    font-size: 2.8rem;
+    filter: drop-shadow(0 0 15px rgba(100,181,246,.8));
+    animation: planetOrbit 12s linear infinite;
+    pointer-events: none;
+    z-index: 1;
+  }
+  
+  @keyframes planetOrbit {
+    0% { 
+      transform: translateY(0) rotate(0deg);
+      filter: drop-shadow(0 0 15px rgba(100,181,246,.8));
+    }
+    25% { 
+      transform: translateY(-10px) rotate(90deg);
+      filter: drop-shadow(0 0 25px rgba(156,39,176,.9));
+    }
+    50% { 
+      transform: translateY(0) rotate(180deg);
+      filter: drop-shadow(0 0 15px rgba(100,181,246,.8));
+    }
+    75% { 
+      transform: translateY(10px) rotate(270deg);
+      filter: drop-shadow(0 0 20px rgba(233,30,99,.8));
+    }
+    100% { 
+      transform: translateY(0) rotate(360deg);
+      filter: drop-shadow(0 0 15px rgba(100,181,246,.8));
+    }
+  }
+  
+  /* Cosmic path with glow */
   .adventure-map.theme-space .map-path:before {
     background: linear-gradient(90deg, 
-      #00bcd4 0%, 
-      #2196f3 25%, 
-      #9c27b0 50%, 
-      #e91e63 75%, 
-      #ff5722 100%
+      #00bcd4 0%,  /* Cyan star */
+      #2196f3 25%, /* Blue galaxy */
+      #9c27b0 50%, /* Purple nebula */
+      #e91e63 75%, /* Pink cosmic */
+      #ff5722 100% /* Orange supernova */
     );
-    box-shadow: 0 0 10px rgba(33,150,243,.8);
-  }
-  .adventure-map.theme-space .map-title {
-    color: #00bcd4;
-    text-shadow: 0 0 10px rgba(0,188,212,.5);
-  }
-  .adventure-map.theme-space .map-progress-text {
-    color: #b3e5fc;
-  }
-  @keyframes twinkle {
-    0%, 100% { opacity: .3; }
-    50% { opacity: .6; }
+    box-shadow: 
+      0 0 10px rgba(33,150,243,.8),
+      0 0 20px rgba(156,39,176,.5);
+    animation: cosmicGlow 3s ease-in-out infinite;
   }
   
-  /* Theme: Rainbow Road */
-  .adventure-map.theme-rainbow {
-    background: linear-gradient(135deg, 
-      #ffebee 0%, 
-      #f3e5f5 20%,
-      #e8eaf6 40%,
-      #e0f2f1 60%,
-      #fff9c4 80%,
-      #ffe0b2 100%
-    );
+  @keyframes cosmicGlow {
+    0%, 100% { 
+      box-shadow: 0 0 10px rgba(33,150,243,.8), 0 0 20px rgba(156,39,176,.5);
+    }
+    50% { 
+      box-shadow: 0 0 20px rgba(33,150,243,1), 0 0 35px rgba(156,39,176,.8);
+    }
   }
+  
+  /* Space-themed text colors */
+  .adventure-map.theme-space .map-title {
+    color: #64b5f6;
+    text-shadow: 
+      0 0 10px rgba(100,181,246,.6),
+      0 0 20px rgba(33,150,243,.4);
+    animation: titleGlow 2s ease-in-out infinite;
+  }
+  
+  @keyframes titleGlow {
+    0%, 100% { 
+      text-shadow: 0 0 10px rgba(100,181,246,.6), 0 0 20px rgba(33,150,243,.4);
+    }
+    50% { 
+      text-shadow: 0 0 15px rgba(100,181,246,.9), 0 0 30px rgba(33,150,243,.6);
+    }
+  }
+  
+  .adventure-map.theme-space .map-progress-text {
+    color: #b3e5fc;
+    text-shadow: 0 0 8px rgba(179,229,252,.5);
+  }
+  
+  /* Space milestone styling */
+  .adventure-map.theme-space .milestone {
+    background: rgba(26,31,74,.9);
+    border: 2px solid rgba(100,181,246,.5);
+    box-shadow: 
+      0 4px 15px rgba(33,150,243,.3),
+      inset 0 0 20px rgba(156,39,176,.2);
+  }
+  
+  .adventure-map.theme-space .milestone.completed {
+    background: linear-gradient(135deg, #2196f3 0%, #00bcd4 100%);
+    box-shadow: 0 6px 25px rgba(33,150,243,.6);
+    border-color: #64b5f6;
+  }
+  
+  .adventure-map.theme-space .milestone.current {
+    background: linear-gradient(135deg, #9c27b0 0%, #e91e63 100%);
+    box-shadow: 0 6px 25px rgba(156,39,176,.8);
+    animation: nebulaPulse 2s ease-in-out infinite;
+    border-color: #ba68c8;
+  }
+  
+  @keyframes nebulaPulse {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 6px 25px rgba(156,39,176,.8);
+    }
+    50% { 
+      transform: scale(1.1);
+      box-shadow: 0 8px 40px rgba(156,39,176,1), 0 0 60px rgba(233,30,99,.6);
+    }
+  }
+  
+  
+  /* Theme: Rainbow Road - Enhanced with color-shifting and sparkles */
+  .adventure-map.theme-rainbow {
+    background: 
+      linear-gradient(135deg, 
+        #ffebee 0%, 
+        #f3e5f5 20%,
+        #e8eaf6 40%,
+        #e0f2f1 60%,
+        #fff9c4 80%,
+        #ffe0b2 100%
+      );
+    background-size: 200% 200%;
+    animation: rainbowShift 10s ease-in-out infinite;
+    position: relative;
+  }
+  
+  @keyframes rainbowShift {
+    0%, 100% { 
+      background-position: 0% 50%; 
+    }
+    50% { 
+      background-position: 100% 50%; 
+    }
+  }
+  
+  /* Giant rainbow with glow */
   .adventure-map.theme-rainbow:before {
     content: "🌈";
     position: absolute;
     top: -10%;
     right: 10%;
     font-size: 8rem;
-    opacity: .4;
+    opacity: .5;
     pointer-events: none;
+    filter: drop-shadow(0 0 20px rgba(255,193,7,.6));
+    animation: rainbowFloat 6s ease-in-out infinite;
   }
+  
+  @keyframes rainbowFloat {
+    0%, 100% { 
+      transform: translateY(0) rotate(0deg);
+      opacity: .5;
+    }
+    50% { 
+      transform: translateY(-15px) rotate(5deg);
+      opacity: .7;
+    }
+  }
+  
+  /* Sparkle effects */
+  .adventure-map.theme-rainbow:after {
+    content: "✨ ⭐ ✨ 💫 ✨ ⭐ ✨";
+    position: absolute;
+    top: 20%;
+    left: 5%;
+    right: 5%;
+    font-size: 1.5rem;
+    opacity: .6;
+    letter-spacing: 3.5rem;
+    pointer-events: none;
+    animation: sparkleShine 3s ease-in-out infinite;
+    z-index: 1;
+  }
+  
+  @keyframes sparkleShine {
+    0%, 100% { 
+      opacity: .4;
+      transform: scale(1) rotate(0deg);
+    }
+    25% { 
+      opacity: .8;
+      transform: scale(1.1) rotate(5deg);
+    }
+    50% { 
+      opacity: .5;
+      transform: scale(1) rotate(0deg);
+    }
+    75% { 
+      opacity: .9;
+      transform: scale(1.15) rotate(-5deg);
+    }
+  }
+  
+  /* Vibrant rainbow path with color-shift animation */
   .adventure-map.theme-rainbow .map-path:before {
     background: linear-gradient(90deg, 
-      #f44336 0%, 
-      #ff9800 16.66%, 
-      #ffeb3b 33.33%, 
-      #4caf50 50%, 
-      #2196f3 66.66%, 
-      #9c27b0 83.33%, 
-      #e91e63 100%
+      #f44336 0%,    /* Red */
+      #ff9800 16.66%, /* Orange */
+      #ffeb3b 33.33%, /* Yellow */
+      #4caf50 50%,    /* Green */
+      #2196f3 66.66%, /* Blue */
+      #9c27b0 83.33%, /* Purple */
+      #e91e63 100%    /* Pink */
     );
+    background-size: 200% 100%;
     height: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    box-shadow: 
+      0 2px 8px rgba(0,0,0,.2),
+      0 0 15px rgba(255,193,7,.4);
+    animation: rainbowPathFlow 4s linear infinite;
   }
+  
+  @keyframes rainbowPathFlow {
+    0% { 
+      background-position: 0% 50%; 
+    }
+    100% { 
+      background-position: 200% 50%; 
+    }
+  }
+  
+  /* Animated gradient text title */
   .adventure-map.theme-rainbow .map-title {
-    background: linear-gradient(90deg, #f44336, #ff9800, #ffeb3b, #4caf50, #2196f3, #9c27b0);
+    background: linear-gradient(
+      90deg, 
+      #f44336, #ff9800, #ffeb3b, #4caf50, #2196f3, #9c27b0, #f44336
+    );
+    background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    animation: rainbowTextFlow 3s linear infinite;
+  }
+  
+  @keyframes rainbowTextFlow {
+    0% { 
+      background-position: 0% center; 
+    }
+    100% { 
+      background-position: 200% center; 
+    }
+  }
+  
+  /* Rainbow milestone styling */
+  .adventure-map.theme-rainbow .milestone {
+    background: rgba(255,255,255,.95);
+    border: 3px solid transparent;
+    background-clip: padding-box;
+    box-shadow: 
+      0 4px 15px rgba(0,0,0,.15),
+      inset 0 0 20px rgba(255,193,7,.2);
+  }
+  
+  .adventure-map.theme-rainbow .milestone.completed {
+    background: linear-gradient(135deg, #4caf50 0%, #8bc34a 100%);
+    box-shadow: 
+      0 6px 25px rgba(76,175,80,.5),
+      0 0 30px rgba(139,195,74,.3);
+  }
+  
+  .adventure-map.theme-rainbow .milestone.current {
+    background: linear-gradient(135deg, 
+      #f44336 0%, 
+      #ff9800 25%, 
+      #ffeb3b 50%, 
+      #ff9800 75%, 
+      #f44336 100%
+    );
+    background-size: 200% auto;
+    animation: rainbowPulse 2s ease-in-out infinite;
+    box-shadow: 
+      0 6px 30px rgba(255,152,0,.8),
+      0 0 40px rgba(255,235,59,.5);
+  }
+  
+  @keyframes rainbowPulse {
+    0%, 100% { 
+      transform: scale(1);
+      background-position: 0% center;
+      box-shadow: 0 6px 30px rgba(255,152,0,.8), 0 0 40px rgba(255,235,59,.5);
+    }
+    50% { 
+      transform: scale(1.12);
+      background-position: 100% center;
+      box-shadow: 0 8px 45px rgba(255,152,0,1), 0 0 60px rgba(255,235,59,.8);
+    }
   }
   
   .adventure-map:before {

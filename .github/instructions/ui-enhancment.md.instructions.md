@@ -576,32 +576,53 @@ p { line-height: 1.8; }
 ## ⏳ PHASE 4: ADVANCED FEATURES - PENDING
 
 ### 4.1 Sound Effects (Optional)
-**Status:** NOT STARTED | **Effort:** 2-3 hours
+**Status:** SKIPPED | **Reason:** Focusing on visual improvements only
 
-- [ ] Add audio element to base.html
-- [ ] Implement sound toggle in settings
-- [ ] Add sounds: button click, success chime, coin jingle, error beep
-- [ ] Store sound preference in session
-- [ ] Find/create royalty-free sound files
+- [~] Add audio element to base.html
+- [~] Implement sound toggle in settings
+- [~] Add sounds: button click, success chime, coin jingle, error beep
+- [~] Store sound preference in session
+- [~] Find/create royalty-free sound files
 
-### 4.2 Theme System
-**Status:** PARTIALLY STARTED | **Effort:** 3-4 hours
+**Note:** Sound effects skipped to focus development effort on visual enhancements that provide more immediate value.
 
-- [ ] Complete Island theme (already in models)
-- [ ] Complete Space theme
-- [ ] Complete Rainbow theme
-- [ ] Add theme selector UI in kid profile
-- [ ] Store theme preference in Kid model (already has `map_theme` field)
-- [ ] Apply theme-specific CSS variables
+### 4.2 Theme System Enhancement
+**Status:** IN PROGRESS | **Effort:** 2-3 hours
 
-### 4.3 Achievement Badges
-**Status:** NOT STARTED | **Effort:** 4-5 hours
+**Current State:** 3 themes already exist (Island, Space, Rainbow) with basic styling in kid/home.html
 
-- [ ] Design badge data model (or use PointAdjustment for milestones)
-- [ ] Create badge icons (emoji-based initially)
-- [ ] Add badge unlock animation
-- [ ] Create badge collection page
-- [ ] Award badges for milestones (5 chores, 10 chores, 100 points, etc.)
+**Planned Improvements:**
+- [ ] Enhance existing theme visual richness
+  - [ ] Island: Add palm tree shadows, wave animations, sand texture
+  - [ ] Space: Add twinkling stars, planet animations, nebula effects
+  - [ ] Rainbow: Add color-shifting animations, sparkle effects
+- [ ] Add theme-specific milestone styles
+- [ ] Theme-aware button and card colors
+- [ ] Smooth theme transitions with CSS animations
+- [ ] Improve theme contrast and readability
+
+**Implementation Notes:**
+- Themes already stored in `Kid.map_theme` field (ISLAND/SPACE/RAINBOW)
+- Map already applies `theme-{{ kid.map_theme|lower }}` class
+- Need to extend existing CSS in kid/home.html
+- Consider adding theme preview to admin panel
+
+### 4.3 Achievement Badges (Visual Only)
+**Status:** SIMPLIFIED | **Effort:** 2-3 hours
+
+**Visual Badge System (No Backend Required):**
+- [ ] Design badge display using CSS and emojis
+- [ ] Create visual milestones in adventure map
+- [ ] Add "celebration moments" at key thresholds
+  - [ ] 5 chores completed: 🌟 "Getting Started!"
+  - [ ] 10 chores: ⭐ "Super Helper!"
+  - [ ] 25 chores: 🏆 "Chore Champion!"
+  - [ ] 50 points: 💰 "Point Collector!"
+  - [ ] 100 points: 👑 "Points Master!"
+- [ ] Display badges in kid profile section
+- [ ] Add badge unlock animations (scale, glow, confetti)
+
+**Implementation:** Pure CSS + JavaScript calculations, no database changes needed
 
 ---
 
@@ -652,23 +673,24 @@ p { line-height: 1.8; }
 
 ---
 
-### 🚀 RESUME HERE - Phase 3: Typography & Content
+### 🚀 RESUME HERE - Phase 4: Advanced Features (Visual Only)
 
-**When you return, start with Phase 3.1:**
+**Current Focus: Phase 4.2 - Theme System Enhancement**
 
-1. **Phase 3.1: Font Improvements** (1 hour)
-   - Verify Fredoka loads correctly on all pages
-   - Increase heading font sizes for kid-facing content (2rem → 2.5rem)
-   - Adjust line-height for longer text blocks (1.6 → 1.8)
-   - Add font fallbacks for offline support
-   - **Target Files:** `base.html`, `kid/home.html`, `kid/login.html`
+1. **Phase 4.2: Enhance Existing Themes** (2-3 hours)
+   - Improve Island theme (palm trees, waves, sand texture)
+   - Enhance Space theme (stars, planets, nebula effects)
+   - Upgrade Rainbow theme (color-shifting, sparkles)
+   - Add theme-specific milestone and button styles
+   - **Target File:** `chorepoints/core/templates/kid/home.html`
 
-2. **Phase 3.2: Icon & Emoji Consistency** (1-2 hours)
-   - Standardize emoji sizes (list: 2rem, headers: 3rem, avatars: 4rem)
-   - Add text-shadow to emojis for depth effect
-   - Implement emoji hover animations (rotate, bounce, scale)
-   - Create utility classes: `.emoji-sm`, `.emoji-md`, `.emoji-lg`
-   - **Target File:** `base.html` (add global emoji styles)
+2. **Phase 4.3: Visual Achievement Badges** (2-3 hours)
+   - Design CSS-only badge system with emoji icons
+   - Add milestone celebration animations
+   - Display badges in profile (5, 10, 25 chores; 50, 100 points)
+   - **Target File:** `chorepoints/core/templates/kid/home.html`
+
+**Note:** Sound effects (Phase 4.1) have been skipped - focusing on visual improvements only.
 
 **Quick Start Commands:**
 ```powershell
