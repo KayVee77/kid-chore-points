@@ -125,6 +125,21 @@ def kid_home(request):
             if segment_length > 0:
                 old_progress_percentage = min(100, int((progress_in_segment / segment_length) * 100))
     
+    # Convert Django messages to JSON for toast notifications
+    django_messages = []
+    storage = messages.get_messages(request)
+    for message in storage:
+        level_map = {
+            messages.SUCCESS: 'success',
+            messages.INFO: 'info',
+            messages.WARNING: 'info',
+            messages.ERROR: 'error',
+        }
+        django_messages.append({
+            'message': str(message),
+            'level': level_map.get(message.level, 'info')
+        })
+    
     return render(
         request,
         "kid/home.html",
@@ -148,6 +163,7 @@ def kid_home(request):
             "old_map_position": old_map_position,
             "old_progress_percentage": old_progress_percentage,
             "newly_affordable_reward_ids": newly_affordable_reward_ids,
+            "django_messages_json": json.dumps(django_messages),
         },
     )
 
