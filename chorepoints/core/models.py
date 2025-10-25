@@ -81,12 +81,16 @@ class Kid(models.Model):
             if segment_length > 0:
                 progress_percentage = min(100, int((progress_in_segment / segment_length) * 100))
         
+        # Calculate points needed to next reward
+        points_needed = next_reward_position - self.map_position if next_reward_position else 0
+        
         return {
             'current_position': self.map_position,
             'milestones': milestones,
             'next_reward_position': next_reward_position,
             'next_reward': next_reward,
             'progress_percentage': progress_percentage,
+            'points_needed': points_needed,
         }
 
     def __str__(self):
