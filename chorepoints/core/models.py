@@ -11,14 +11,21 @@ except ImportError:  # Pillow should be installed; safeguard
 User = get_user_model()
 
 class Kid(models.Model):
+    class MapTheme(models.TextChoices):
+        ISLAND = "ISLAND", "Island"
+        SPACE = "SPACE", "Space"
+        RAINBOW = "RAINBOW", "Rainbow Road"
+    
     parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="kids")
     name = models.CharField(max_length=100)
     pin = models.CharField(max_length=20)  # Plaintext (MVP only)
     points_balance = models.IntegerField(default=0)
+    map_position = models.IntegerField(default=0, help_text="Nuotykių žemėlapio pozicija (suskaičiuoti taškai)")
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     avatar_emoji = models.CharField(max_length=4, blank=True, default="", help_text="Emoji (jei tuščia – generuojama raidė)")
     photo = models.ImageField(upload_to="kid_avatars/", null=True, blank=True, help_text="Nuotrauka (jei nenaudojamas emoji)")
+    map_theme = models.CharField(max_length=10, choices=MapTheme.choices, default=MapTheme.ISLAND, help_text="Nuotykių žemėlapio tema")
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -39,6 +46,68 @@ class Kid(models.Model):
         if self.name:
             return self.name[0].upper()
         return "?"
+
+    def get_map_progress(self) -> dict:
+        """Calculate adventure map progress based on reward costs."""
+        from .models import Reward  # Avoid circular import
+        
+        # Get all active rewards ordered by cost_points (milestones)
+        rewards = Reward.objects.filter(parent=self.parent, active=True).order_by('cost_points')
+        
+        milestones = []
+        for reward in rewards:
+            # Determine accessibility status
+            if reward.cost_points <= self.map_position:
+                aria_status = "pasiekta"  # achieved
+            elif self.points_balance >= reward.cost_points:
+                aria_status = "galima prašyti"  # can request
+            else:
+                points_needed_for_aria = reward.cost_points - self.points_balance
+                aria_status = f"dar reikia {points_needed_for_aria} taškų"  # still need X points
+            
+            milestones.append({
+                'position': reward.cost_points,
+                'reward_id': reward.id,
+                'reward_title': reward.title,
+                'reward_icon': reward.display_icon,
+                'aria_label': f"{reward.title}, {reward.cost_points} taškai, {aria_status}",
+            })
+        
+        # Find next reward position
+        next_reward_position = None
+        next_reward = None
+        for milestone in milestones:
+            if milestone['position'] > self.map_position:
+                next_reward_position = milestone['position']
+                next_reward = milestone
+                break
+        
+        # Calculate progress percentage to next reward
+        progress_percentage = 0
+        if next_reward_position:
+            # Find previous milestone (or 0 if this is the first)
+            prev_position = 0
+            for milestone in milestones:
+                if milestone['position'] < next_reward_position:
+                    prev_position = milestone['position']
+            
+            segment_length = next_reward_position - prev_position
+            progress_in_segment = self.map_position - prev_position
+            
+            if segment_length > 0:
+                progress_percentage = min(100, int((progress_in_segment / segment_length) * 100))
+        
+        # Calculate points needed to next reward
+        points_needed = next_reward_position - self.map_position if next_reward_position else 0
+        
+        return {
+            'current_position': self.map_position,
+            'milestones': milestones,
+            'next_reward_position': next_reward_position,
+            'next_reward': next_reward,
+            'progress_percentage': progress_percentage,
+            'points_needed': points_needed,
+        }
 
     def __str__(self):
         return f"{self.name} ({self.parent.username})"
@@ -122,7 +191,8 @@ class ChoreLog(models.Model):
             return False
         with transaction.atomic():
             self.child.points_balance += self.points_awarded
-            self.child.save(update_fields=["points_balance"])
+            self.child.map_position += self.points_awarded
+            self.child.save(update_fields=["points_balance", "map_position"])
             self.status = self.Status.APPROVED
             self.processed_at = timezone.now()
             self.save(update_fields=["status", "processed_at"])

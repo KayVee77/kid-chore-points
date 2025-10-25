@@ -15,6 +15,556 @@
     .btn.reward {background:#e3f2fd;}
   .progress-outer {background:#eee; height:14px; border-radius:8px; overflow:hidden; box-shadow:inset 0 1px 2px rgba(0,0,0,.2);}
   .progress-fill {background:linear-gradient(90deg,#42a5f5,#66bb6a); height:100%; width:calc(var(--p,0) * 1%); transition:width .6s;}
+  
+  /* Adventure Map Styles */
+  .adventure-map {
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,.1);
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Theme: Island (default) */
+  .adventure-map.theme-island {
+    background: linear-gradient(135deg, #e3f2fd 0%, #fff9c4 100%);
+  }
+  .adventure-map.theme-island:before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,235,59,.3) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .adventure-map.theme-island .map-path:before {
+    background: linear-gradient(90deg, 
+      #4caf50 0%, 
+      #8bc34a 25%, 
+      #ffeb3b 50%, 
+      #ff9800 75%, 
+      #f44336 100%
+    );
+  }
+  
+  /* Theme: Space */
+  .adventure-map.theme-space {
+    background: linear-gradient(135deg, #0d1117 0%, #1a1f35 50%, #2d1b69 100%);
+  }
+  .adventure-map.theme-space:before {
+    content: "✨ ⭐ 🌟 ☄️ 🪐";
+    position: absolute;
+    top: 10%;
+    left: 5%;
+    right: 5%;
+    font-size: 2rem;
+    opacity: .3;
+    letter-spacing: 3rem;
+    pointer-events: none;
+    animation: twinkle 3s ease-in-out infinite;
+  }
+  .adventure-map.theme-space .map-path:before {
+    background: linear-gradient(90deg, 
+      #00bcd4 0%, 
+      #2196f3 25%, 
+      #9c27b0 50%, 
+      #e91e63 75%, 
+      #ff5722 100%
+    );
+    box-shadow: 0 0 10px rgba(33,150,243,.8);
+  }
+  .adventure-map.theme-space .map-title {
+    color: #00bcd4;
+    text-shadow: 0 0 10px rgba(0,188,212,.5);
+  }
+  .adventure-map.theme-space .map-progress-text {
+    color: #b3e5fc;
+  }
+  @keyframes twinkle {
+    0%, 100% { opacity: .3; }
+    50% { opacity: .6; }
+  }
+  
+  /* Theme: Rainbow Road */
+  .adventure-map.theme-rainbow {
+    background: linear-gradient(135deg, 
+      #ffebee 0%, 
+      #f3e5f5 20%,
+      #e8eaf6 40%,
+      #e0f2f1 60%,
+      #fff9c4 80%,
+      #ffe0b2 100%
+    );
+  }
+  .adventure-map.theme-rainbow:before {
+    content: "🌈";
+    position: absolute;
+    top: -10%;
+    right: 10%;
+    font-size: 8rem;
+    opacity: .4;
+    pointer-events: none;
+  }
+  .adventure-map.theme-rainbow .map-path:before {
+    background: linear-gradient(90deg, 
+      #f44336 0%, 
+      #ff9800 16.66%, 
+      #ffeb3b 33.33%, 
+      #4caf50 50%, 
+      #2196f3 66.66%, 
+      #9c27b0 83.33%, 
+      #e91e63 100%
+    );
+    height: 6px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .adventure-map.theme-rainbow .map-title {
+    background: linear-gradient(90deg, #f44336, #ff9800, #ffeb3b, #4caf50, #2196f3, #9c27b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .adventure-map:before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(255,235,59,.3) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .map-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1976d2;
+    margin: 0 0 1rem 0;
+    text-shadow: 1px 1px 2px rgba(255,255,255,.8);
+  }
+  .map-path {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    position: relative;
+    padding: 1rem 0;
+  }
+  .map-path:before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 2px;
+    z-index: 0;
+  }
+  .milestone {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .5rem;
+  }
+  .milestone-marker {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    background: white;
+    border: 4px solid #ddd;
+    box-shadow: 0 4px 8px rgba(0,0,0,.2);
+    transition: all .3s;
+  }
+  .milestone.completed .milestone-marker {
+    border-color: #4caf50;
+    background: #e8f5e9;
+    transform: scale(1.1);
+    box-shadow: 0 0 20px rgba(76,175,80,.5);
+  }
+  .milestone.current .milestone-marker {
+    border-color: #ff9800;
+    background: #fff3e0;
+    animation: pulse 2s ease-in-out infinite;
+    transform: scale(1.2);
+    box-shadow: 0 0 25px rgba(255,152,0,.7);
+  }
+  .milestone.future .milestone-marker {
+    border-color: #bdbdbd;
+    background: #f5f5f5;
+    opacity: .7;
+  }
+  .milestone-label {
+    font-size: .75rem;
+    font-weight: 600;
+    text-align: center;
+    max-width: 80px;
+    color: #555;
+  }
+  .milestone.current .milestone-label {
+    color: #ff9800;
+    font-weight: 700;
+  }
+  .milestone.completed .milestone-label {
+    color: #4caf50;
+  }
+  .kid-position {
+    position: absolute;
+    z-index: 2;
+    font-size: 3rem;
+    filter: drop-shadow(0 4px 6px rgba(0,0,0,.3));
+    animation: float 3s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { transform: scale(1.2); }
+    50% { transform: scale(1.3); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes slideToNewPosition {
+    from {
+      left: var(--old-pos, 0%);
+    }
+    to {
+      left: var(--new-pos, 0%);
+    }
+  }
+  .kid-position.moving {
+    animation: slideToNewPosition 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+  }
+  .map-progress-text {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: .9rem;
+    color: #666;
+  }
+
+  /* Interactive Milestone Hover Effects */
+  .milestone-marker {
+    cursor: pointer;
+    user-select: none;
+  }
+  .milestone-marker:hover {
+    transform: scale(1.15) !important;
+    box-shadow: 0 6px 12px rgba(0,0,0,.3) !important;
+  }
+  .milestone.completed .milestone-marker:hover {
+    box-shadow: 0 0 30px rgba(76,175,80,.7) !important;
+  }
+  .milestone.current .milestone-marker:hover {
+    box-shadow: 0 0 35px rgba(255,152,0,.9) !important;
+  }
+  .milestone.future .milestone-marker:hover {
+    opacity: 1;
+    border-color: #9e9e9e;
+    box-shadow: 0 6px 12px rgba(0,0,0,.25) !important;
+  }
+
+  /* Shake animation for locked milestones */
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+  .milestone-locked {
+    animation: shake 0.3s ease-in-out;
+  }
+
+  /* Reward Detail Modal */
+  .modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(4px);
+  }
+  .modal-content {
+    position: relative;
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0,0,0,.3);
+    animation: modalSlideIn 0.3s ease-out;
+    text-align: center;
+  }
+  @keyframes modalSlideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-30px) scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: #f5f5f5;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all .2s;
+    color: #666;
+  }
+  .modal-close:hover {
+    background: #e0e0e0;
+    transform: rotate(90deg);
+    color: #333;
+  }
+  .modal-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+  }
+  .modal-content h3 {
+    margin: .5rem 0;
+    color: #333;
+    font-size: 1.5rem;
+  }
+  .modal-points {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #ff9800;
+    margin: .5rem 0;
+  }
+  .modal-description {
+    color: #666;
+    margin: 1rem 0;
+    line-height: 1.5;
+    font-size: .95rem;
+  }
+  .modal-status {
+    margin-top: 1.5rem;
+    padding: .75rem;
+    border-radius: 8px;
+    font-weight: 600;
+  }
+  .modal-status.unlocked {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 2px solid #4caf50;
+  }
+  .modal-status.locked {
+    background: #fff3e0;
+    color: #e65100;
+    border: 2px solid #ff9800;
+  }
+  .modal-status.achieved {
+    background: #e3f2fd;
+    color: #1565c0;
+    border: #2196f3;
+  }
+
+  /* Reduced Motion Support */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .milestone-marker:hover {
+      transform: none !important;
+    }
+    .kid-position {
+      animation: none !important;
+    }
+    .sparkle-particle {
+      display: none !important;
+    }
+  }
+  
+  /* Mobile Optimization */
+  @media (max-width: 768px) {
+    .adventure-map {
+      padding: 1rem;
+      margin: 1rem -1rem;
+      border-radius: 0;
+    }
+    .map-path {
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      padding: 1rem 0;
+      display: flex;
+      flex-wrap: nowrap;
+      min-width: 100%;
+    }
+    .milestone {
+      flex-shrink: 0;
+      min-width: 80px;
+    }
+    .milestone-marker {
+      width: 56px;
+      height: 56px;
+      font-size: 1.75rem;
+      /* Ensure tap target is at least 44px */
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .progress-bubble {
+      font-size: .75rem;
+      padding: .4rem .8rem;
+      white-space: normal;
+      max-width: 120px;
+      text-align: center;
+    }
+    .map-title {
+      font-size: 1.25rem;
+    }
+    .map-progress-text {
+      font-size: .8rem;
+      padding: 0 .5rem;
+    }
+  }
+  
+  /* Tablet Optimization */
+  @media (min-width: 769px) and (max-width: 1024px) {
+    .milestone-marker {
+      width: 58px;
+      height: 58px;
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+
+  /* Milestone Unlock Celebration Animations */
+  @keyframes milestoneUnlock {
+    0% {
+      transform: scale(0.5) rotate(-180deg);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.3) rotate(10deg);
+    }
+    100% {
+      transform: scale(1.1) rotate(0deg);
+      opacity: 1;
+    }
+  }
+  @keyframes sparkle {
+    0%, 100% {
+      opacity: 0;
+      transform: scale(0);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  @keyframes glowPulse {
+    0%, 100% {
+      box-shadow: 0 0 20px rgba(76,175,80,.5), 0 0 40px rgba(76,175,80,.3);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(76,175,80,.8), 0 0 60px rgba(76,175,80,.5);
+    }
+  }
+  .milestone-just-unlocked {
+    animation: milestoneUnlock 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  .milestone-just-unlocked .milestone-marker {
+    animation: glowPulse 1.5s ease-in-out 3;
+  }
+  .sparkle-particle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #ffd700;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: sparkle 1s ease-out forwards;
+    box-shadow: 0 0 10px #ffd700;
+  }
+  
+  /* Progress Encouragement Bubble */
+  .progress-bubble {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: white;
+    border: 3px solid #ff9800;
+    border-radius: 16px;
+    padding: .5rem 1rem;
+    font-size: .85rem;
+    font-weight: 700;
+    color: #ff9800;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,.2);
+    z-index: 3;
+    animation: bubbleBounce 2s ease-in-out infinite;
+  }
+  .progress-bubble:after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 8px solid transparent;
+    border-right: 8px solid transparent;
+    border-top: 10px solid #ff9800;
+  }
+  @keyframes bubbleBounce {
+    0%, 100% { transform: translateX(-50%) translateY(-10px); }
+    50% { transform: translateX(-50%) translateY(-16px); }
+  }
+  
+  /* Newly Affordable Treasure Effect */
+  .treasure-newly-affordable {
+    animation: treasureUnlock 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+  .treasure-newly-affordable .milestone-marker {
+    border-color: #4caf50 !important;
+    background: #e8f5e9 !important;
+    animation: glowPulse 1.5s ease-in-out 3;
+    box-shadow: 0 0 30px rgba(76,175,80,.8) !important;
+  }
+  @keyframes treasureUnlock {
+    0% {
+      transform: scale(0.8) rotate(-5deg);
+    }
+    50% {
+      transform: scale(1.3) rotate(5deg);
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+  }
   </style>
   <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
     <div class="avatar">
@@ -36,6 +586,104 @@
           <div class="small" style="text-align:right;">{{ progress_percent }}%</div>
         </div>
       {% endif %}
+    </div>
+  </div>
+
+  {# Adventure Map Section #}
+  {% if map_data %}
+  <div class="adventure-map theme-{{ kid.map_theme|lower }}">
+    <h3 class="map-title">🗺️ Nuotykių Žemėlapis</h3>
+    <div class="map-path">
+      {# Start position #}
+      <div class="milestone completed">
+        <div class="milestone-marker">🏁</div>
+        <div class="milestone-label">Pradžia</div>
+      </div>
+      
+      {# Reward milestones #}
+      {% for milestone in map_data.milestones %}
+      <div class="milestone {% if milestone.position <= map_data.current_position %}completed{% elif milestone.position == map_data.next_reward_position %}current{% else %}future{% endif %} {% if milestone.reward_id in newly_affordable_reward_ids %}treasure-newly-affordable{% endif %}"
+           data-reward-id="{{ milestone.reward_id }}"
+           data-reward-title="{{ milestone.reward_title }}"
+           data-reward-icon="{{ milestone.reward_icon }}"
+           data-reward-points="{{ milestone.position }}"
+           data-current-points="{{ kid.points_balance }}"
+           data-map-position="{{ map_data.current_position }}"
+           data-is-achieved="{% if milestone.position <= map_data.current_position %}true{% else %}false{% endif %}"
+           role="button"
+           tabindex="0"
+           aria-label="{{ milestone.aria_label }}"
+           onkeypress="if(event.key==='Enter' || event.key===' '){showRewardDetails(this)}">
+        <div class="milestone-marker" onclick="showRewardDetails(this.parentElement)">
+          {{ milestone.reward_icon }}
+        </div>
+        <div class="milestone-label">
+          {{ milestone.reward_title }}<br>
+          <small>({{ milestone.position }} tšk)</small>
+        </div>
+      </div>
+      {% endfor %}
+      
+      {# Kid's current position indicator #}
+      {% if kid.avatar_emoji %}
+      <div class="kid-position {% if milestone_unlocked %}moving{% endif %}" 
+           id="kidPositionIndicator"
+           style="left: {{ map_data.progress_percentage }}%; --old-pos: {{ old_progress_percentage }}%; --new-pos: {{ map_data.progress_percentage }}%;">
+        {{ kid.avatar_emoji }}
+        {% if map_data.next_reward and map_data.points_needed > 0 %}
+        <div class="progress-bubble">
+          {% if map_data.points_needed <= 3 %}
+            🔥 Beveik ten! Dar {{ map_data.points_needed }} tšk!
+          {% elif map_data.points_needed <= 10 %}
+            💪 Dar {{ map_data.points_needed }} tšk!
+          {% else %}
+            ⭐ Dar {{ map_data.points_needed }} tšk!
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% else %}
+      <div class="kid-position {% if milestone_unlocked %}moving{% endif %}" 
+           id="kidPositionIndicator"
+           style="left: {{ map_data.progress_percentage }}%; --old-pos: {{ old_progress_percentage }}%; --new-pos: {{ map_data.progress_percentage }}%;">
+        🧒
+        {% if map_data.next_reward and map_data.points_needed > 0 %}
+        <div class="progress-bubble">
+          {% if map_data.points_needed <= 3 %}
+            🔥 Beveik ten! Dar {{ map_data.points_needed }} tšk!
+          {% elif map_data.points_needed <= 10 %}
+            💪 Dar {{ map_data.points_needed }} tšk!
+          {% else %}
+            ⭐ Dar {{ map_data.points_needed }} tšk!
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+    
+    <div class="map-progress-text">
+      {% if map_data.next_reward %}
+        <strong>Tu esi čia: {{ map_data.current_position }} tšk</strong> • 
+        Dar {{ map_data.points_needed }} tšk iki 
+        <strong>{{ map_data.next_reward.reward_title }}</strong>!
+      {% else %}
+        <strong>🎉 Sveikiname! Pasiekei visus apdovanojimus!</strong>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {# Reward Detail Modal #}
+  <div id="rewardModal" class="modal" style="display: none;">
+    <div class="modal-overlay" onclick="closeRewardModal()"></div>
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeRewardModal()">✕</button>
+      <div class="modal-icon" id="modalIcon">🎁</div>
+      <h3 id="modalTitle">Apdovanojimas</h3>
+      <div class="modal-points" id="modalPoints">0 tšk</div>
+      <div class="modal-description" id="modalDescription"></div>
+      <div class="modal-status" id="modalStatus"></div>
     </div>
   </div>
 
@@ -146,6 +794,127 @@
   </div>
 
   <p><a class="btn" href="{% url 'kid_logout' %}">Atsijungti</a></p>
+
+  <script>
+    // Interactive Adventure Map Functions
+    function showRewardDetails(milestoneElement) {
+      const rewardTitle = milestoneElement.dataset.rewardTitle;
+      const rewardIcon = milestoneElement.dataset.rewardIcon;
+      const rewardPoints = parseInt(milestoneElement.dataset.rewardPoints);
+      const currentPoints = parseInt(milestoneElement.dataset.currentPoints);
+      const isAchieved = milestoneElement.dataset.isAchieved === 'true';
+      
+      // Update modal content
+      document.getElementById('modalIcon').textContent = rewardIcon;
+      document.getElementById('modalTitle').textContent = rewardTitle;
+      document.getElementById('modalPoints').textContent = rewardPoints + ' tšk';
+      
+      // Determine status
+      const statusEl = document.getElementById('modalStatus');
+      const pointsNeeded = rewardPoints - currentPoints;
+      
+      if (isAchieved) {
+        statusEl.className = 'modal-status achieved';
+        statusEl.innerHTML = '🎉 <strong>Pasiekta!</strong><br>Tu jau pasiekei šį etapą!';
+      } else if (currentPoints >= rewardPoints) {
+        statusEl.className = 'modal-status unlocked';
+        statusEl.innerHTML = '✅ <strong>Gali prašyti!</strong><br>Turi pakankamai taškų!';
+      } else {
+        statusEl.className = 'modal-status locked';
+        statusEl.innerHTML = '🔒 <strong>Dar reikia ' + pointsNeeded + ' tšk!</strong><br>Dirbi gerai, tęsk!';
+        
+        // Shake animation for locked milestones
+        milestoneElement.classList.add('milestone-locked');
+        setTimeout(() => {
+          milestoneElement.classList.remove('milestone-locked');
+        }, 300);
+      }
+      
+      // Show modal
+      document.getElementById('rewardModal').style.display = 'flex';
+    }
+    
+    function closeRewardModal() {
+      document.getElementById('rewardModal').style.display = 'none';
+    }
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeRewardModal();
+      }
+    });
+
+    // Milestone Unlock Celebration
+    (function() {
+      const milestoneUnlocked = JSON.parse('{{ milestone_unlocked|yesno:"true,false" }}');
+      if (!milestoneUnlocked) return;
+
+      const newlyUnlocked = {{ newly_unlocked_milestones_json|safe }};
+      if (newlyUnlocked.length === 0) return;
+
+      // Add celebration class to newly unlocked milestones
+      setTimeout(() => {
+        newlyUnlocked.forEach(milestone => {
+          const milestoneEl = document.querySelector(`.milestone[data-reward-id="${milestone.reward_id}"]`);
+          if (milestoneEl) {
+            milestoneEl.classList.add('milestone-just-unlocked');
+            
+            // Create sparkle particles around the milestone
+            createSparkles(milestoneEl);
+            
+            // Scroll to the milestone
+            setTimeout(() => {
+              milestoneEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 400);
+            
+            // Remove animation class after completion
+            setTimeout(() => {
+              milestoneEl.classList.remove('milestone-just-unlocked');
+            }, 2000);
+          }
+        });
+      }, 500);
+
+      // Create sparkle particles
+      function createSparkles(element) {
+        const rect = element.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const sparkleCount = 12;
+
+        for (let i = 0; i < sparkleCount; i++) {
+          const sparkle = document.createElement('div');
+          sparkle.className = 'sparkle-particle';
+          
+          const angle = (i / sparkleCount) * Math.PI * 2;
+          const distance = 60 + Math.random() * 40;
+          const endX = centerX + Math.cos(angle) * distance;
+          const endY = centerY + Math.sin(angle) * distance;
+          
+          sparkle.style.left = centerX + 'px';
+          sparkle.style.top = centerY + 'px';
+          sparkle.style.position = 'fixed';
+          
+          document.body.appendChild(sparkle);
+          
+          // Animate sparkle outward
+          const delay = Math.random() * 200;
+          setTimeout(() => {
+            sparkle.style.transition = 'all 1s ease-out';
+            sparkle.style.left = endX + 'px';
+            sparkle.style.top = endY + 'px';
+          }, delay);
+          
+          // Remove sparkle after animation
+          setTimeout(() => {
+            sparkle.remove();
+          }, 1200 + delay);
+        }
+      }
+    })();
+  </script>
+
   <canvas id="confetti-canvas" style="position:fixed; inset:0; width:100%; height:100%; pointer-events:none; display:none;"></canvas>
   <script>
     (function(){

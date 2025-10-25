@@ -1,0 +1,13 @@
+{
+  "mcp.servers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@executeautomation/playwright-mcp-server"
+      ]
+    }
+  },
+  "chat.mcp.access": "all",
+  "chat.mcp.autostart": "newAndOutdated"
+}
