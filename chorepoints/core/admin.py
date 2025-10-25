@@ -9,15 +9,35 @@ class KidAdmin(admin.ModelAdmin):
 
 @admin.register(Chore)
 class ChoreAdmin(admin.ModelAdmin):
-    list_display = ("title", "points", "parent", "active")
+    list_display = ("icon_preview", "title", "points", "parent", "active")
     list_filter = ("active", "parent")
     search_fields = ("title",)
+    fields = ("parent", "title", "points", "active", "icon_emoji", "icon_image")
+
+    def icon_preview(self, obj):
+        if obj.icon_image:
+            return f"<img src='{obj.icon_image.url}' style='width:32px; height:32px; object-fit:cover; border-radius:4px;' />"
+        if obj.icon_emoji:
+            return f"<span style='font-size:1.5rem;'>{obj.icon_emoji}</span>"
+        return ""
+    icon_preview.short_description = "Ikona"
+    icon_preview.allow_tags = True
 
 @admin.register(Reward)
 class RewardAdmin(admin.ModelAdmin):
-    list_display = ("title", "cost_points", "parent", "active")
+    list_display = ("icon_preview", "title", "cost_points", "parent", "active")
     list_filter = ("active", "parent")
     search_fields = ("title",)
+    fields = ("parent", "title", "cost_points", "active", "icon_emoji", "icon_image")
+
+    def icon_preview(self, obj):
+        if obj.icon_image:
+            return f"<img src='{obj.icon_image.url}' style='width:32px; height:32px; object-fit:cover; border-radius:4px;' />"
+        if obj.icon_emoji:
+            return f"<span style='font-size:1.5rem;'>{obj.icon_emoji}</span>"
+        return ""
+    icon_preview.short_description = "Ikona"
+    icon_preview.allow_tags = True
 
 @admin.register(ChoreLog)
 class ChoreLogAdmin(admin.ModelAdmin):

@@ -5,15 +5,15 @@ from core.models import Kid, Chore, Reward
 KIDS = ["Elija", "Agota"]
 PIN = "1234"
 CHORES = [
-    ("Išnešti šiukšles", 2),
-    ("Susitvarkyti kambarį", 3),
-    ("Išplauti indus", 2),
-    ("Pamaitinti augintinį", 1),
+    ("Išnešti šiukšles", 2, "🗑️"),
+    ("Susitvarkyti kambarį", 3, "🧸"),
+    ("Išplauti indus", 2, "🍽️"),
+    ("Pamaitinti augintinį", 1, "🐾"),
 ]
 REWARDS = [
-    ("30 min ekranui", 5),
-    ("Saldi užkandėlė", 4),
-    ("Vakaras be namų ruošos", 8),
+    ("30 min ekranui", 5, "🕹️"),
+    ("Saldi užkandėlė", 4, "🍬"),
+    ("Vakaras be namų ruošos", 8, "🌙"),
 ]
 
 class Command(BaseCommand):
@@ -40,19 +40,31 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS(f"Kid ready: {kid.name} (PIN {PIN})"))
 
         # Chores
-        for title, points in CHORES:
-            chore, created = Chore.objects.get_or_create(parent=parent, title=title, defaults={'points': points})
-            if not created and chore.points != points:
+        for title, points, emoji in CHORES:
+            chore, created = Chore.objects.get_or_create(parent=parent, title=title, defaults={'points': points, 'icon_emoji': emoji})
+            changed = False
+            if chore.points != points:
                 chore.points = points
-                chore.save(update_fields=['points'])
-            self.stdout.write(self.style.SUCCESS(f"Chore: {title} (+{points})"))
+                changed = True
+            if not chore.icon_emoji:
+                chore.icon_emoji = emoji
+                changed = True
+            if changed:
+                chore.save()
+            self.stdout.write(self.style.SUCCESS(f"Chore: {title} (+{points}) {emoji}"))
 
         # Rewards
-        for title, cost in REWARDS:
-            reward, created = Reward.objects.get_or_create(parent=parent, title=title, defaults={'cost_points': cost})
-            if not created and reward.cost_points != cost:
+        for title, cost, emoji in REWARDS:
+            reward, created = Reward.objects.get_or_create(parent=parent, title=title, defaults={'cost_points': cost, 'icon_emoji': emoji})
+            changed = False
+            if reward.cost_points != cost:
                 reward.cost_points = cost
-                reward.save(update_fields=['cost_points'])
-            self.stdout.write(self.style.SUCCESS(f"Reward: {title} ({cost})"))
+                changed = True
+            if not reward.icon_emoji:
+                reward.icon_emoji = emoji
+                changed = True
+            if changed:
+                reward.save()
+            self.stdout.write(self.style.SUCCESS(f"Reward: {title} ({cost}) {emoji}"))
 
         self.stdout.write(self.style.NOTICE("Done. Kids can log in at /kid/login/ (PIN 1234)."))

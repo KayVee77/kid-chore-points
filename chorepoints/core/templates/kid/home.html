@@ -45,7 +45,11 @@
       <div class="cards-grid">
       {% for chore in chores %}
         <div class="card chore-card">
-          <div><strong>{{ chore.title }}</strong><br><span class="small">+{{ chore.points }} tšk</span></div>
+          <div>
+            <strong>
+              {% if chore.icon_image %}<img src="{{ chore.icon_image.url }}" alt="" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif chore.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ chore.icon_emoji }}</span>{% endif %}
+              {{ chore.title }}
+            </strong><br><span class="small">+{{ chore.points }} tšk</span></div>
           {% if chore.id in pending_chore_ids %}
             <div class="small" style="margin-top:.5rem; font-weight:600; color:#ff9800;">⌛ Laukia patvirtinimo</div>
           {% else %}
@@ -66,7 +70,11 @@
       <div class="cards-grid">
       {% for reward in rewards %}
         <div class="card reward-card">
-          <div><strong>{{ reward.title }}</strong><br><span class="small">{{ reward.cost_points }} tšk</span></div>
+          <div>
+            <strong>
+              {% if reward.icon_image %}<img src="{{ reward.icon_image.url }}" alt="" style="width:28px; height:28px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif reward.icon_emoji %}<span style="font-size:1.2rem; margin-right:4px;">{{ reward.icon_emoji }}</span>{% endif %}
+              {{ reward.title }}
+            </strong><br><span class="small">{{ reward.cost_points }} tšk</span></div>
           {% if reward.id in pending_reward_ids %}
             <div class="small" style="margin-top:.5rem; font-weight:600; color:#ff9800;">⌛ Laukia patvirtinimo</div>
           {% else %}
@@ -89,7 +97,7 @@
       <div class="cards-grid">
       {% for log in pending_logs %}
         <div class="card">
-          <div><strong>{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.get_status_display }}</span></div>
+          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.get_status_display }}</span></div>
         </div>
       {% empty %}
         <p>Nėra laukiančių.</p>
@@ -101,7 +109,7 @@
       <div class="cards-grid">
       {% for red in pending_redemptions %}
         <div class="card">
-          <div><strong>{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.get_status_display }}</span></div>
+          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.get_status_display }}</span></div>
         </div>
       {% empty %}
         <p>Nėra laukiančių.</p>
@@ -116,7 +124,7 @@
       <div class="cards-grid">
       {% for log in approved_logs %}
         <div class="card" style="border-left:6px solid #66bb6a;">
-          <div><strong>{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.processed_at|date:"Y-m-d H:i" }}</span></div>
+          <div><strong>{% if log.chore.icon_image %}<img src="{{ log.chore.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif log.chore.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ log.chore.icon_emoji }}</span>{% endif %}{{ log.chore.title }}</strong><br><span class="small">+{{ log.points_awarded }} tšk • {{ log.processed_at|date:"Y-m-d H:i" }}</span></div>
         </div>
       {% empty %}
         <p>Dar nėra patvirtintų.</p>
@@ -128,7 +136,7 @@
       <div class="cards-grid">
       {% for red in approved_redemptions %}
         <div class="card" style="border-left:6px solid #ab47bc;">
-          <div><strong>{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.processed_at|date:"Y-m-d H:i" }}</span></div>
+          <div><strong>{% if red.reward.icon_image %}<img src="{{ red.reward.icon_image.url }}" alt="" style="width:22px; height:22px; object-fit:cover; vertical-align:middle; border-radius:4px; margin-right:4px;" />{% elif red.reward.icon_emoji %}<span style="font-size:1rem; margin-right:4px;">{{ red.reward.icon_emoji }}</span>{% endif %}{{ red.reward.title }}</strong><br><span class="small">-{{ red.cost_points }} tšk • {{ red.processed_at|date:"Y-m-d H:i" }}</span></div>
         </div>
       {% empty %}
         <p>Dar nėra patvirtintų.</p>

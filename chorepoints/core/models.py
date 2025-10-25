@@ -48,6 +48,25 @@ class Chore(models.Model):
     title = models.CharField(max_length=200)
     points = models.IntegerField(default=1)
     active = models.BooleanField(default=True)
+    icon_emoji = models.CharField(max_length=8, blank=True, default="", help_text="Emoji (pvz. 🧹) – jei nėra paveikslėlio")
+    icon_image = models.ImageField(upload_to="chore_icons/", null=True, blank=True, help_text="Paveikslėlis (128x128 rekomenduojama)")
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.icon_image and Image:
+            from PIL import Image as PilImage
+            path = Path(self.icon_image.path)
+            try:
+                with PilImage.open(path) as img:
+                    if img.width > 128 or img.height > 128:
+                        img.thumbnail((128,128))
+                        img.save(path)
+            except Exception:
+                pass
+
+    @property
+    def display_icon(self):
+        return self.icon_emoji or "🧹"
 
     def __str__(self):
         return f"{self.title} (+{self.points} pts)"
@@ -57,6 +76,25 @@ class Reward(models.Model):
     title = models.CharField(max_length=200)
     cost_points = models.IntegerField(default=5)
     active = models.BooleanField(default=True)
+    icon_emoji = models.CharField(max_length=8, blank=True, default="", help_text="Emoji (pvz. 🎁) – jei nėra paveikslėlio")
+    icon_image = models.ImageField(upload_to="reward_icons/", null=True, blank=True, help_text="Paveikslėlis (128x128 rekomenduojama)")
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.icon_image and Image:
+            from PIL import Image as PilImage
+            path = Path(self.icon_image.path)
+            try:
+                with PilImage.open(path) as img:
+                    if img.width > 128 or img.height > 128:
+                        img.thumbnail((128,128))
+                        img.save(path)
+            except Exception:
+                pass
+
+    @property
+    def display_icon(self):
+        return self.icon_emoji or "🎁"
 
     def __str__(self):
         return f"{self.title} (-{self.cost_points} pts)"
