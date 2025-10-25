@@ -92,13 +92,16 @@ def kid_home(request):
     request.session["last_seen_map_position"] = kid.map_position
     
     # Track newly affordable rewards (treasure unlock effect)
-    last_seen_balance = request.session.get("last_seen_balance", 0)
+    last_seen_balance = request.session.get("last_seen_balance", kid.points_balance)
+    points_changed = kid.points_balance != last_seen_balance
+    old_points_balance = last_seen_balance
     newly_affordable_reward_ids = []
     if kid.points_balance > last_seen_balance:
         # Find rewards that just became affordable
         for reward in rewards:
             if last_seen_balance < reward.cost_points <= kid.points_balance:
                 newly_affordable_reward_ids.append(reward.id)
+    # Update last seen balance AFTER we've captured the old value
     request.session["last_seen_balance"] = kid.points_balance
     
     # Recent approved history (limit 10 each)
@@ -164,6 +167,8 @@ def kid_home(request):
             "old_progress_percentage": old_progress_percentage,
             "newly_affordable_reward_ids": newly_affordable_reward_ids,
             "django_messages_json": json.dumps(django_messages),
+            "points_changed": points_changed,
+            "old_points_balance": old_points_balance,
         },
     )
 

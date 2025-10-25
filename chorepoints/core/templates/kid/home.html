@@ -102,6 +102,17 @@
       box-shadow: 0 4px 12px rgba(255, 152, 0, .4);
       animation: pointsPulse 2s ease-in-out infinite;
       border: 3px solid white;
+      transition: all 0.3s ease;
+    }
+    
+    .points-badge.animating {
+      animation: pointsChange 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes pointsChange {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.2); box-shadow: 0 8px 20px rgba(255, 152, 0, .8); }
+      100% { transform: scale(1); }
     }
     
     @keyframes pointsPulse {
@@ -912,7 +923,7 @@
     </div>
     <div style="flex: 1;">
       <h2 style="margin:0 0 .5rem 0; font-size: 2rem; color: var(--color-gray-800);">Sveikas, {{ kid.name }}!</h2>
-      <div class="points-badge">⭐ {{ kid.points_balance }} taškai</div>
+      <div id="points-badge" class="points-badge" data-current-points="{{ kid.points_balance }}" data-old-points="{{ old_points_balance }}">⭐ <span id="points-value">{{ kid.points_balance }}</span> taškai</div>
       {% if next_reward %}
         <div style="margin-top:.75rem; max-width:380px;">
           <div class="small" style="font-weight:700; color: var(--color-gray-700); margin-bottom: .5rem;">🎯 Iki: {{ next_reward.title }} ({{ next_reward.cost_points }} tšk)</div>
@@ -1172,6 +1183,52 @@
           showToast(msg.message, msg.level);
         }, index * 150); // Stagger multiple messages
       });
+    })();
+
+    // Point Counter Animation
+    function animatePointChange(oldValue, newValue) {
+      const badge = document.getElementById('points-badge');
+      const valueSpan = document.getElementById('points-value');
+      if (!badge || !valueSpan) return;
+      
+      const duration = 1000; // 1 second
+      const steps = 30;
+      const increment = (newValue - oldValue) / steps;
+      const stepDuration = duration / steps;
+      
+      let current = oldValue;
+      badge.classList.add('animating');
+      
+      const interval = setInterval(() => {
+        current += increment;
+        if ((increment > 0 && current >= newValue) || (increment < 0 && current <= newValue)) {
+          clearInterval(interval);
+          valueSpan.textContent = newValue;
+          setTimeout(() => {
+            badge.classList.remove('animating');
+          }, 300);
+        } else {
+          valueSpan.textContent = Math.round(current);
+        }
+      }, stepDuration);
+    }
+
+    // Trigger point animation on page load if points changed
+    (function() {
+      const pointsChanged = JSON.parse('{{ points_changed|yesno:"true,false" }}');
+      if (!pointsChanged) return;
+      
+      const badge = document.getElementById('points-badge');
+      if (!badge) return;
+      
+      const oldPoints = parseInt(badge.dataset.oldPoints) || 0;
+      const currentPoints = parseInt(badge.dataset.currentPoints) || 0;
+      
+      if (oldPoints !== currentPoints) {
+        setTimeout(() => {
+          animatePointChange(oldPoints, currentPoints);
+        }, 400); // Delay slightly for toast to appear first
+      }
     })();
   </script>
 
