@@ -6,7 +6,7 @@ applyTo: '**'
 
 **Branch:** `feature/kid-ui-enhancement`  
 **Started:** October 25, 2025  
-**Last Updated:** October 25, 2025 (Point counter animation completed)
+**Last Updated:** October 25, 2025 (Phase 2.1 toast & point animation tested with Playwright)
 
 > **IMPORTANT:** This file tracks ongoing UI enhancement work. Update completion status after each task and commit changes to track progress.
 
@@ -200,7 +200,9 @@ function animatePointChange(oldValue, newValue) {
 - [x] Point counter animation implemented ✅
 - [x] Point badge scales and glows during animation ✅
 - [x] Points count up/down smoothly over 1 second ✅
-- [ ] Test on chore submission (manual testing needed)
+- [x] Test on chore submission (Playwright automated test) ✅
+- [x] Test point animation after approval (23→24 points) ✅
+- [x] Verify confetti still works with new features ✅
 - [ ] Test on mobile viewport (375px)
 - [ ] Verify respects `prefers-reduced-motion`
 
