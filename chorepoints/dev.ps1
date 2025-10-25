@@ -15,7 +15,8 @@ if ($Reset -and (Test-Path .venv)) {
 
 if (-not (Test-Path .venv)) {
 	Write-Host "Creating virtual environment" -ForegroundColor Green
-	python -m venv .venv || exit 1
+	python -m venv .venv
+	if ($LASTEXITCODE -ne 0) { exit 1 }
 }
 
 . .venv/Scripts/Activate.ps1
@@ -31,7 +32,8 @@ if (Test-Path $reqFile) {
 	$storedHash = if (Test-Path $hashFile) { Get-Content $hashFile -ErrorAction SilentlyContinue } else { "" }
 	if ($currentHash -ne $storedHash) {
 		Write-Host "Installing / updating dependencies" -ForegroundColor Green
-		pip install -r $reqFile || exit 1
+		pip install -r $reqFile
+		if ($LASTEXITCODE -ne 0) { exit 1 }
 		$currentHash | Out-File $hashFile -Encoding ascii -Force
 	} else {
 		Write-Host "Dependencies up to date" -ForegroundColor DarkGray
@@ -42,7 +44,8 @@ else {
 }
 
 Write-Host "Applying migrations" -ForegroundColor Green
-python manage.py migrate || exit 1
+python manage.py migrate
+if ($LASTEXITCODE -ne 0) { exit 1 }
 
 $url = "http://127.0.0.1:$Port/"
 Write-Host "Opening $url" -ForegroundColor Cyan
