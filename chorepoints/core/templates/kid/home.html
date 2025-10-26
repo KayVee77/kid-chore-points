@@ -1901,6 +1901,27 @@
     </div>
   </div>
 
+  <div class="row">
+    <div class="grow">
+      <h3>💝 Tėvų suteikti taškai (paskutiniai)</h3>
+      <div class="cards-grid">
+      {% for adj in recent_adjustments %}
+        <div class="card" style="border-left:6px solid {% if adj.points > 0 %}#4caf50{% else %}#ff5722{% endif %};">
+          <div>
+            <strong style="color: {% if adj.points > 0 %}#4caf50{% else %}#ff5722{% endif %};">
+              {% if adj.points > 0 %}+{% endif %}{{ adj.points }} tašk{% if adj.points == 1 %}as{% else %}ai{% endif %}
+            </strong><br>
+            <span style="margin-top:6px; display:block;">{{ adj.reason }}</span><br>
+            <span class="small">{{ adj.created_at|date:"Y-m-d H:i" }}</span>
+          </div>
+        </div>
+      {% empty %}
+        <p>Dar nėra tėvų suteiktų taškų.</p>
+      {% endfor %}
+      </div>
+    </div>
+  </div>
+
   <p><a class="btn" href="{% url 'kid_logout' %}">Atsijungti</a></p>
 
   {# Toast Notification Container #}

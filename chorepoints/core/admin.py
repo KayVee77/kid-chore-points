@@ -90,6 +90,20 @@ class RedemptionAdmin(admin.ModelAdmin):
 
 @admin.register(PointAdjustment)
 class PointAdjustmentAdmin(admin.ModelAdmin):
-    list_display = ("kid", "parent", "points", "reason", "created_at")
-    list_filter = ("parent", "kid")
+    list_display = ("created_at", "kid", "points_display", "reason", "parent")
+    list_filter = ("parent", "kid", "created_at")
     search_fields = ("kid__name", "reason")
+    fields = ("kid", "points", "reason")
+    readonly_fields = ("parent", "created_at")
+    ordering = ("-created_at",)
+    
+    def points_display(self, obj):
+        color = "green" if obj.points > 0 else "red"
+        sign = "+" if obj.points >= 0 else ""
+        return mark_safe(f"<span style='color:{color}; font-weight:bold;'>{sign}{obj.points}</span>")
+    points_display.short_description = "Taškai"
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # Only set parent on creation
+            obj.parent = request.user
+        super().save_model(request, obj, form, change)

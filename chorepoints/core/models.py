@@ -310,8 +310,8 @@ class Redemption(models.Model):
 class PointAdjustment(models.Model):
     parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="point_adjustments")
     kid = models.ForeignKey(Kid, on_delete=models.CASCADE, related_name="point_adjustments")
-    points = models.IntegerField(help_text="Positive or negative integer to adjust balance")
-    reason = models.CharField(max_length=255, blank=True)
+    points = models.IntegerField(help_text="Teigiamas skaičius prideda taškus, neigiamas - atima")
+    reason = models.CharField(max_length=255, help_text="Priežastis (matoma vaikui)")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
