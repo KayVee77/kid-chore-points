@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import mark_safe
 from .models import Kid, Chore, Reward, ChoreLog, Redemption, PointAdjustment
 
 @admin.register(Kid)
@@ -22,12 +23,11 @@ class ChoreAdmin(admin.ModelAdmin):
 
     def icon_preview(self, obj):
         if obj.icon_image:
-            return f"<img src='{obj.icon_image.url}' style='width:32px; height:32px; object-fit:cover; border-radius:4px;' />"
+            return mark_safe(f"<img src='{obj.icon_image.url}' style='width:32px; height:32px; object-fit:cover; border-radius:4px;' />")
         if obj.icon_emoji:
-            return f"<span style='font-size:1.5rem;'>{obj.icon_emoji}</span>"
+            return mark_safe(f"<span style='font-size:1.5rem;'>{obj.icon_emoji}</span>")
         return ""
     icon_preview.short_description = "Ikona"
-    icon_preview.allow_tags = True
 
 @admin.register(Reward)
 class RewardAdmin(admin.ModelAdmin):
@@ -38,12 +38,11 @@ class RewardAdmin(admin.ModelAdmin):
 
     def icon_preview(self, obj):
         if obj.icon_image:
-            return f"<img src='{obj.icon_image.url}' style='width:32px; height:32px; object-fit:cover; border-radius:4px;' />"
+            return mark_safe(f"<img src='{obj.icon_image.url}' style='width:32px; height:32px; object-fit:cover; border-radius:4px;' />")
         if obj.icon_emoji:
-            return f"<span style='font-size:1.5rem;'>{obj.icon_emoji}</span>"
+            return mark_safe(f"<span style='font-size:1.5rem;'>{obj.icon_emoji}</span>")
         return ""
     icon_preview.short_description = "Ikona"
-    icon_preview.allow_tags = True
 
 @admin.register(ChoreLog)
 class ChoreLogAdmin(admin.ModelAdmin):
