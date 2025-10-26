@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
-from .forms import KidLoginForm
+from .forms import KidLoginForm, ChangePinForm
 from .models import Kid, Chore, Reward, ChoreLog, Redemption
 from django.utils import timezone
 import json
@@ -205,3 +205,31 @@ def redeem_reward(request, reward_id):
     Redemption.objects.create(child=kid, reward=reward, cost_points=reward.cost_points)
     messages.success(request, f"Prašymas dėl apdovanojimo: '{reward.title}' ({reward.cost_points} tšk) pateiktas ir laukia patvirtinimo.")
     return redirect("kid_home")
+
+@require_http_methods(["GET", "POST"])
+def change_pin(request):
+    """Allow kid to change their own PIN by verifying the old one first."""
+    kid = _get_kid(request)
+    if not kid:
+        return redirect("kid_login")
+    
+    if request.method == "POST":
+        form = ChangePinForm(request.POST)
+        if form.is_valid():
+            old_pin = form.cleaned_data['old_pin']
+            new_pin = form.cleaned_data['new_pin']
+            
+            # Verify old PIN
+            if kid.pin != old_pin:
+                messages.error(request, "Neteisingas senas PIN. Bandyk dar kartą.")
+                return render(request, "kid/change_pin.html", {"form": form, "kid": kid})
+            
+            # Update to new PIN
+            kid.pin = new_pin
+            kid.save()
+            messages.success(request, "PIN sėkmingai pakeistas! Dabar gali naudoti naują PIN prisijungimui.")
+            return redirect("kid_home")
+    else:
+        form = ChangePinForm()
+    
+    return render(request, "kid/change_pin.html", {"form": form, "kid": kid})
