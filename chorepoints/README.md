@@ -96,6 +96,11 @@ Sukuria pavyzdį: vaikus (Eliją, Agotą, PIN 1234), numatytus darbus ir apdovan
 5. Tėvai admin'e patvirtina ar atmeta laukiančius įrašus
 6. Patvirtinus taškai automatiškai sumuojami / nuskaitomi
 
+### Taškų vertės gairė
+
+- Orientacinė konversija: 5 taškai ≈ 1 €.
+- Tai tik gairė tėvų biudžetavimui; realūs taškai nurodyti prie darbų ir apdovanojimų.
+
 ## ✅ Patvirtinimo darbo eiga
 
 - Vaikas pateikia darbą / apdovanojimo prašymą → sukuriamas `PENDING` įrašas (`ChoreLog` / `Redemption`).
@@ -197,6 +202,11 @@ Visit http://127.0.0.1:8000/
 6. Tėvai admin'e patvirtina arba atmeta laukiančius įrašus.
 
 Data persists in SQLite (db.sqlite3). For local demo only.
+
+### Points-to-euro rule of thumb
+
+- Approximate conversion: 5 pts ≈ €1.
+- This is only guidance for budgeting; actual point values are defined per chore/reward.
 
 ## Nuotraukų (avatarų) įkėlimas
 1. Nueikite į /admin/ -> Kids.
