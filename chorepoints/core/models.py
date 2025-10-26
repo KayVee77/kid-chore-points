@@ -226,11 +226,29 @@ class ChoreLog(models.Model):
                 if old_position < milestone['position'] <= self.child.map_position:
                     milestones_crossed.append(milestone)
             
+            # Check for bonuses after the last defined milestone (every 500 pts)
+            last_milestone_position = ACHIEVEMENT_MILESTONES[-1]['position']
+            if old_position >= last_milestone_position:
+                # Check every 500-point interval crossed
+                old_interval = old_position // 500
+                new_interval = self.child.map_position // 500
+                intervals_crossed = new_interval - old_interval
+                
+                if intervals_crossed > 0:
+                    for _ in range(intervals_crossed):
+                        milestones_crossed.append({
+                            'position': (old_interval + 1) * 500,
+                            'name': 'Bonus Milestone',
+                            'icon': '🎁',
+                            'bonus': 50
+                        })
+            
             # Award bonuses for crossed milestones
             for milestone in milestones_crossed:
                 self.child.points_balance += milestone['bonus']
                 self.child.map_position += milestone['bonus']
-                self.child.highest_milestone = milestone['position']
+                if milestone['position'] <= last_milestone_position:
+                    self.child.highest_milestone = milestone['position']
             
             self.child.save(update_fields=["points_balance", "map_position", "highest_milestone"])
             self.status = self.Status.APPROVED
@@ -313,11 +331,29 @@ class PointAdjustment(models.Model):
                     if old_position < milestone['position'] <= self.kid.map_position:
                         milestones_crossed.append(milestone)
                 
+                # Check for bonuses after the last defined milestone (every 500 pts)
+                last_milestone_position = ACHIEVEMENT_MILESTONES[-1]['position']
+                if old_position >= last_milestone_position:
+                    # Check every 500-point interval crossed
+                    old_interval = old_position // 500
+                    new_interval = self.kid.map_position // 500
+                    intervals_crossed = new_interval - old_interval
+                    
+                    if intervals_crossed > 0:
+                        for _ in range(intervals_crossed):
+                            milestones_crossed.append({
+                                'position': (old_interval + 1) * 500,
+                                'name': 'Bonus Milestone',
+                                'icon': '🎁',
+                                'bonus': 50
+                            })
+                
                 # Award bonuses for crossed milestones
                 for milestone in milestones_crossed:
                     self.kid.points_balance += milestone['bonus']
                     self.kid.map_position += milestone['bonus']
-                    self.kid.highest_milestone = milestone['position']
+                    if milestone['position'] <= last_milestone_position:
+                        self.kid.highest_milestone = milestone['position']
             
             self.kid.save(update_fields=["points_balance", "map_position", "highest_milestone"])
 
