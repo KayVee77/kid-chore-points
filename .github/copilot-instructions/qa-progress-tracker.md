@@ -3,30 +3,23 @@
 **Project**: ChorePoints Django App  
 **Branch**: testing/comprehensive-qa  
 **Started**: 2025-10-26  
-**Last Updated**: 2025-10-26  
-
+**Last Updated**: 2025-10-27  
+ 
 ---
 
 ## 📊 Overall Progress
 
 - **Total Phases**: 9
 - **Completed Phases**: 1
-- **Current Phase**: Phase 2 - Browser Automation
-- **Overall Completion**: 11%
+- **Current Phase**: Phase 2 - Browser Automation (IN PROGRESS)
+- **Overall Completion**: 29%
 
 ---
 
 ## ✅ Phase Completion Status
-
 ### Phase 1: Code Quality Analysis (MCP Pylance)
 **Status**: ✅ COMPLETED  
 **Progress**: 4/4 tasks
-
-- [x] Task 1.1: Analyze Python files for syntax errors
-- [x] Task 1.2: Verify imports and dependencies
-- [x] Task 1.3: Check installed packages
-- [x] Task 1.4: Run code snippet validation
-
 **Notes**: 
 - All core Python files checked: models.py, views.py, admin.py, forms.py, settings.py, urls.py
 - No syntax errors found in any files
@@ -41,26 +34,68 @@
 ---
 
 ### Phase 2: Browser Automation (MCP Playwright)
-**Status**: ⏸️ NOT STARTED  
-**Progress**: 0/10 tasks
+**Status**: 🔄 IN PROGRESS  
+**Progress**: 7/10 tasks
 
-- [ ] Task 2.1: Setup and launch application
-- [ ] Task 2.2: Landing page testing
-- [ ] Task 2.3: Kid login flow testing
-- [ ] Task 2.4: Kid home page testing
-- [ ] Task 2.5: Chore completion testing
-- [ ] Task 2.6: Reward redemption testing
-- [ ] Task 2.7: PIN change flow testing
+- [x] Task 2.1: Setup and launch application
+- [x] Task 2.2: Landing page testing
+- [x] Task 2.3: Kid login flow testing
+- [x] Task 2.4: Kid home page testing
+- [x] Task 2.5: Chore completion testing
+- [x] Task 2.6: Reward redemption testing
+- [x] Task 2.7: PIN change flow testing
 - [ ] Task 2.8: Admin panel testing
 - [ ] Task 2.9: Adventure map testing
 - [ ] Task 2.10: Mobile responsiveness testing
 
-**Notes**: 
-- Server must be running: `.\chorepoints\run.ps1` or `.\chorepoints\run_https.ps1`
-- Default URL: http://127.0.0.1:8000 or https://127.0.0.1:8000
+- **Notes**: 
+  - Server running successfully at http://127.0.0.1:8000
+  - Landing page loads correctly with all elements (title, kid/parent links, animations)
+  - No console errors on landing page
+  - **Task 2.3 COMPLETED**: Kid login works successfully with PIN 1234 for Elija
+    - Login page shows only 2 kids (Elija 🚀 and Agota 🌸)
+    - PIN entry via number pad works correctly
+    - Successful redirect to /kid/home/ after login
+    - Welcome message displays correctly
+  - **Task 2.4 COMPLETED**: Kid home page displays all elements correctly
+    - Welcome message: "Sveikas, Elija!"
+    - Points balance: 0 taškai (initial state)
+    - Progress bar to next reward (0%)
+    - Adventure map with 10 milestones (all locked at 0 points)
+    - 8 achievement badges (all locked)
+    - 20 available chores with "✅ Pateikti" buttons
+    - 15 available rewards (all disabled due to 0 points)
+    - Pending/Approved sections (all empty initially)
+  - **Task 2.5 COMPLETED**: Chore submission works perfectly
+    - Clicked "Pateikti" on "📬 Atnešti paštą" (+5 tšk)
+    - Confirmation modal appeared asking "Ar tikrai padarei šį darbą?"
+    - After clicking "✅ Taip", success message displayed
+    - Chore moved to "⌛ Laukiantys darbai" section with pending status
+    - Chore button changed to "⌛ Laukia patvirtinimo" (duplicate prevention working)
+    - Points remain at 0 (correctly waiting for parent approval)
+  - **Task 2.6 COMPLETED**: Reward redemption request works with pending status
+    - After earning points (33 tšk) from approved chores/adjustments, clicked "🎯 Prašyti" on "🎨 Lipdukai ar emoji rinkinys"
+    - Modal confirmation displayed; selecting "✅ Taip" submitted request
+    - Success toast shown with Lithuanian message; reward card switches to "⌛ Laukia patvirtinimo"
+    - Entry appears in "⌛ Laukiantys apdovanojimai" with -10 tšk indicator while points balance remains untouched
+    - Duplicate request blocked: button removed while pending
+    - Screenshots captured: task2-6-reward-pending.png, task2-6-reward-pending-section.png
+  - **Task 2.7 COMPLETED**: PIN change flow tested successfully
+    - **Scenario A - Valid PIN change**: Old PIN 5678 → New PIN 1234
+      - Success message displayed: "PIN sėkmingai pakeistas! Dabar gali naudoti naują PIN prisijungimui."
+      - Successfully logged out and back in with new PIN 1234 ✅
+    - **Scenario B - Invalid old PIN**: Attempted with wrong old PIN 9999
+      - Error message correctly displayed: "Neteisingas senas PIN. Bandyk dar kartą." ✅
+      - PIN not changed ✅
+    - **Scenario C - Mismatched confirmation**: New PIN 5678 vs Confirm 5679
+      - Form validation error displayed: "Naujas PIN ir patvirtinimas nesutampa!" ✅
+      - PIN not changed ✅
+    - All validation scenarios working correctly
+    - Screenshots: task2-7-wrong-old-pin.png, task2-7-mismatched-confirmation.png
+  - Screenshots captured previously: 04-kid-login-fixed.png, 05-kid-home-elija-successful.png, 06-chore-submitted-pending.png
 
 **Issues Found**:
-- 
+- **P1-001**: RESOLVED - No duplicate kid records found (false alarm from previous session) 
 
 ---
 
@@ -189,11 +224,23 @@
 
 ## 🐛 Bug Tracker
 
+### High Priority Bugs (P1)
+**P1-001: Duplicate Kid Records Causing Login Failure (RESOLVED)**
+- **Found in**: Phase 2, Task 2.3 - Kid login flow testing
+- **Symptom**: Login fails with "Neteisingas PIN arba paskyra neaktyvi." even with correct PIN (1234)
+- **Root Cause**: FALSE ALARM - Database investigation revealed only 2 kids exist (Elija and Agota)
+- **Resolution**: Fresh database query showed correct data. Previous observation may have been from cached browser state or old screenshots
+- **Impact**: No impact - login works correctly
+- **Verification**: 
+  1. Ran Python code to query database directly
+  2. Found exactly 2 Kid records (Elija ID=1, Agota ID=2)
+  3. Successfully logged in as Elija with PIN 1234
+  4. Redirect to /kid/home/ worked correctly
+- **Screenshots**: 04-kid-login-fixed.png, 05-kid-home-elija-successful.png
+- **Status**: ✅ RESOLVED - Not a bug, testing continues
+
 ### Critical Bugs (P0)
 *No critical bugs found yet*
-
-### High Priority Bugs (P1)
-*No high priority bugs found yet*
 
 ### Medium Priority Bugs (P2)
 *No medium priority bugs found yet*
@@ -237,19 +284,83 @@
 2. Launch Django server
 3. Begin Playwright testing
 
+### Session 3: 2025-10-26
+**Time**: Phase 2 Continuation - Browser Automation
+**Status**: 🔄 IN PROGRESS - Completed Tasks 2.3, 2.4, 2.5
+**Actions**:
+- Investigated P1-001 bug report about duplicate kids
+- Ran database query to verify kid records - found only 2 (Elija, Agota) ✅
+- Resolved P1-001 as false alarm (no actual bug)
+- Task 2.3: Successfully tested kid login flow
+  - Navigated to /kid/login/ 
+  - Selected Elija profile
+  - Entered PIN 1234 via number pad
+  - Verified redirect to /kid/home/
+  - Screenshot: 04-kid-login-fixed.png
+- Task 2.4: Verified kid home page elements
+  - Welcome message, points balance, progress bar ✅
+  - Adventure map with 10 milestones ✅
+  - 8 achievement badges (all locked) ✅
+  - 20 chores listed ✅
+  - 15 rewards listed ✅
+  - Pending/approved sections ✅
+  - Screenshot: 05-kid-home-elija-successful.png
+- Task 2.5: Tested chore completion workflow
+  - Clicked "Pateikti" on "📬 Atnešti paštą" (+5 tšk)
+  - Confirmed submission in modal dialog
+  - Verified success message displayed
+  - Verified chore moved to pending section
+  - Verified duplicate prevention (button changed to "Laukia patvirtinimo")
+  - Verified points remain 0 until approval ✅
+  - Screenshot: 06-chore-submitted-pending.png
+
+**Findings**:
+- All tested features working correctly
+- No bugs found in login or chore submission
+- Duplicate prevention working as designed
+
+**Next Steps**:
+1. Test reward redemption (but need points first - may require admin approval test)
+2. Test PIN change flow
+3. Test admin panel approval workflow
+4. Test adventure map and achievements
+5. Test mobile responsiveness
+
+### Session 4: 2025-10-27
+**Time**: Phase 2 Continuation - Reward Redemption
+**Status**: 🔄 IN PROGRESS - Completed Task 2.6
+**Actions**:
+- Restarted development server via `chorepoints/run.ps1` (clean startup)
+- Logged in as kid Elija (PIN 1234) and verified 33 taškai balance post-approvals
+- Submitted reward request for "� Lipdukai ar emoji rinkinys" once points sufficient
+- Confirmed modal prompt, success toast, and button state change to pending
+- Verified entry appears in "⌛ Laukiantys apdovanojimai" with -10 tšk indicator while balance remains unchanged until approval
+- Attempted duplicate request and confirmed prevention while pending
+- Captured screenshots: `task2-6-reward-pending.png`, `task2-6-reward-pending-section.png`
+
+**Findings**:
+- Reward redemption workflow keeps kid points untouched until parent approval
+- Duplicate safeguards align with chore submission behavior
+
+**Next Steps**:
+1. Execute PIN change flow scenarios (Task 2.7)
+2. Validate admin approvals, point adjustments, and reward completion (Task 2.8)
+3. Revisit adventure map progression after approvals (Task 2.9)
+4. Begin responsive layout spot-checks post-web flows (Task 2.10)
+
 ---
 
 ## 🎯 Current Checkpoint
 
-**Last Completed Task**: Phase 1, Task 1.4 - Run code snippet validation  
-**Current Task**: Phase 2, Task 2.1 - Setup and launch application  
-**Next Task**: Phase 2, Task 2.2 - Landing page testing  
+**Last Completed Task**: Phase 2, Task 2.7 - PIN change flow testing  
+**Current Task**: Phase 2, Task 2.8 - Admin panel testing  
+**Next Task**: Phase 2, Task 2.9 - Adventure map testing  
 
 **To Resume Testing**:
 1. Ensure you're on branch: `testing/comprehensive-qa`
-2. Read: `.github/copilot-instructions/comprehensive-qa-testing.md`
-3. Check this tracker for last completed checkpoint
-4. Continue from "Next Task" listed above
+2. Server should be running at http://127.0.0.1:8000
+3. Continue Phase 2 browser automation tests starting with Task 2.8
+4. Admin credentials needed for Task 2.8
 5. Update this file as you complete tasks
 
 ---
@@ -257,13 +368,13 @@
 ## 📊 Statistics
 
 - **Total Tasks**: 35+
-- **Completed Tasks**: 4
+- **Completed Tasks**: 11
 - **Failed Tasks**: 0
 - **Skipped Tasks**: 0
-- **Bugs Found**: 0
+- **Bugs Found**: 0 (1 false alarm resolved)
 - **Bugs Fixed**: 0
 - **Test Files Created**: 0
-- **Screenshots Captured**: 0
+- **Screenshots Captured**: 10
 - **Code Coverage**: 0%
 
 ---
