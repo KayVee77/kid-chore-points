@@ -23,6 +23,9 @@ if (-not (Test-Path $VenvPath)) {
 Write-Host "Activating virtual environment" -ForegroundColor Green
 . (Join-Path $VenvPath "Scripts\Activate.ps1")
 
+# Get local IP address for network access
+$LocalIP = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object {$_.InterfaceAlias -like '*Wi-Fi*' -or $_.InterfaceAlias -like '*Ethernet*'} | Select-Object -First 1).IPAddress
+
 # Open browser
 $url = "http://127.0.0.1:$Port/"
 Write-Host "Opening $url" -ForegroundColor Cyan
@@ -31,7 +34,11 @@ Start-Process $url
 # Change to chorepoints directory where manage.py is located
 Set-Location $ScriptDir
 
-# Start server
+# Start server with network access
 Write-Host "Starting Django development server (CTRL+C to stop)" -ForegroundColor Green
+Write-Host "Local access: http://127.0.0.1:$Port/" -ForegroundColor Yellow
+if ($LocalIP) {
+	Write-Host "Network access: http://${LocalIP}:$Port/" -ForegroundColor Yellow
+}
 Write-Host "Tip: Use ./chorepoints/dev.ps1 if you need to install/update packages or run migrations" -ForegroundColor DarkGray
-python manage.py runserver 127.0.0.1:$Port
+python manage.py runserver 0.0.0.0:$Port
