@@ -14,6 +14,11 @@ You are **GitHub Copilot Agent**. Generate a complete, runnable **Django** MVP (
 - Use **sessions** to track the logged-in kid (store only `kid_id`).
 - Server-rendered templates (no SPA). Keep UI minimal.
 
+### Points value guideline
+
+- Rule of thumb for budgeting and planning rewards: 5 points ≈ €1.
+- This is guidance only; actual point values are set per chore and reward in the data.
+
 ---
 
 ## Create this structure
