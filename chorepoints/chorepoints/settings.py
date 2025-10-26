@@ -20,6 +20,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',  # Add for i18n support
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -57,9 +58,21 @@ DATABASES = {
 AUTH_PASSWORD_VALIDATORS = []  # Simplified for local MVP
 
 LANGUAGE_CODE = 'lt'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Vilnius'  # Lithuanian timezone
 USE_I18N = True
+USE_L10N = True  # Use localized formatting
 USE_TZ = True
+
+# Supported languages
+LANGUAGES = [
+    ('lt', 'Lietuvių'),
+    ('en', 'English'),
+]
+
+# Path for locale files
+LOCALE_PATHS = [
+    BASE_DIR / 'locale',
+]
 
 STATIC_URL = 'static/'
 MEDIA_URL = '/media/'

@@ -26,9 +26,9 @@ ACHIEVEMENT_MILESTONES = [
 
 class Kid(models.Model):
     class MapTheme(models.TextChoices):
-        ISLAND = "ISLAND", "Island"
-        SPACE = "SPACE", "Space"
-        RAINBOW = "RAINBOW", "Rainbow Road"
+        ISLAND = "ISLAND", "Sala"
+        SPACE = "SPACE", "Kosmosas"
+        RAINBOW = "RAINBOW", "Vaivorykštės kelias"
     
     parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="kids")
     name = models.CharField(max_length=100)
@@ -135,6 +135,10 @@ class Kid(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.parent.username})"
+    
+    class Meta:
+        verbose_name = "Vaikas"
+        verbose_name_plural = "Vaikai"
 
 class Chore(models.Model):
     parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="chores")
@@ -163,6 +167,10 @@ class Chore(models.Model):
 
     def __str__(self):
         return f"{self.title} (+{self.points} pts)"
+    
+    class Meta:
+        verbose_name = "Darbas"
+        verbose_name_plural = "Darbai"
 
 class Reward(models.Model):
     parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="rewards")
@@ -191,12 +199,16 @@ class Reward(models.Model):
 
     def __str__(self):
         return f"{self.title} (-{self.cost_points} pts)"
+    
+    class Meta:
+        verbose_name = "Apdovanojimas"
+        verbose_name_plural = "Apdovanojimai"
 
 class ChoreLog(models.Model):
     class Status(models.TextChoices):
-        PENDING = "PENDING", "Pending"
-        APPROVED = "APPROVED", "Approved"
-        REJECTED = "REJECTED", "Rejected"
+        PENDING = "PENDING", "Laukia"
+        APPROVED = "APPROVED", "Patvirtinta"
+        REJECTED = "REJECTED", "Atmesta"
 
     child = models.ForeignKey(Kid, on_delete=models.CASCADE, related_name="chore_logs")
     chore = models.ForeignKey(Chore, on_delete=models.PROTECT)
@@ -263,12 +275,16 @@ class ChoreLog(models.Model):
         self.processed_at = timezone.now()
         self.save(update_fields=["status", "processed_at"])
         return True
+    
+    class Meta:
+        verbose_name = "Darbo įrašas"
+        verbose_name_plural = "Darbų įrašai"
 
 class Redemption(models.Model):
     class Status(models.TextChoices):
-        PENDING = "PENDING", "Pending"
-        APPROVED = "APPROVED", "Approved"
-        REJECTED = "REJECTED", "Rejected"
+        PENDING = "PENDING", "Laukia"
+        APPROVED = "APPROVED", "Patvirtinta"
+        REJECTED = "REJECTED", "Atmesta"
 
     child = models.ForeignKey(Kid, on_delete=models.CASCADE, related_name="redemptions")
     reward = models.ForeignKey(Reward, on_delete=models.PROTECT)
@@ -305,6 +321,10 @@ class Redemption(models.Model):
         self.processed_at = timezone.now()
         self.save(update_fields=["status", "processed_at"])
         return True
+    
+    class Meta:
+        verbose_name = "Apdovanojimo išpirkimas"
+        verbose_name_plural = "Apdovanojimų išpirkimai"
 
 
 class PointAdjustment(models.Model):
@@ -360,3 +380,8 @@ class PointAdjustment(models.Model):
     def __str__(self):
         sign = '+' if self.points >= 0 else ''
         return f"Adj {sign}{self.points} for {self.kid.name}"
+    
+    class Meta:
+        verbose_name = "Taškų koregavimas"
+        verbose_name_plural = "Taškų koregavimai"
+        ordering = ['-created_at']
