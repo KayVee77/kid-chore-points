@@ -5,7 +5,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'dev-insecure-key'
 DEBUG = True
-ALLOWED_HOSTS: list[str] = []
+ALLOWED_HOSTS: list[str] = ['localhost', '127.0.0.1', '192.168.0.35', '*']  # Allow access from local network
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',  # For HTTPS runserver_plus
     'core',
 ]
 
