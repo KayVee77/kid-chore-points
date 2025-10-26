@@ -190,6 +190,8 @@ class ChoreLog(models.Model):
         if self.status != self.Status.PENDING:
             return False
         with transaction.atomic():
+            # Refresh child from DB to avoid race conditions when approving multiple logs
+            self.child.refresh_from_db()
             self.child.points_balance += self.points_awarded
             self.child.map_position += self.points_awarded
             self.child.save(update_fields=["points_balance", "map_position"])
@@ -227,10 +229,12 @@ class Redemption(models.Model):
     def approve(self):
         if self.status != self.Status.PENDING:
             return False
-        # ensure sufficient points at approval time
-        if self.child.points_balance < self.cost_points:
-            return False
         with transaction.atomic():
+            # Refresh child from DB to avoid race conditions when approving multiple redemptions
+            self.child.refresh_from_db()
+            # ensure sufficient points at approval time
+            if self.child.points_balance < self.cost_points:
+                return False
             self.child.points_balance -= self.cost_points
             self.child.save(update_fields=["points_balance"])
             self.status = self.Status.APPROVED
