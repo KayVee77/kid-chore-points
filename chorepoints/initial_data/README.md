@@ -4,50 +4,107 @@ This folder contains the initial setup data for the ChorePoints system that can 
 
 ## Files
 
-- `Darbai__5_8_m_____prad_ios_paketas.csv` - Chores for kids aged 5-8 (20 chores)
-- `Apdovanojimai___prad_ios_paketas.csv` - Rewards (15 rewards)
+- **`users.json`** - Admin users and kids configuration (editable!)
+- **`chores.csv`** - Available chores with points and emojis (20 chores)
+- **`rewards.csv`** - Available rewards with costs and emojis (15 rewards)
 
-## Default Setup
+## Default Setup (Edit users.json to customize!)
 
-### Parent User
-- **Username:** `tevai`
-- **Password:** `tevai123` (change after first login!)
-- **Email:** `tevai@example.com`
-- **Role:** Admin/Superuser
+### Admin Users (from users.json)
+```json
+{
+  "admin_users": [
+    {
+      "username": "tevai",
+      "password": "tevai123",
+      "email": "tevai@example.com",
+      "is_staff": true,
+      "is_superuser": true
+    }
+  ]
+}
+```
 
-### Kids
-| Name | PIN | Emoji |
-|------|-----|-------|
-| Elija | 1234 | 🚀 |
-| Agota | 1234 | 🌸 |
+### Kids (from users.json)
+```json
+{
+  "kids": [
+    {
+      "name": "Elija",
+      "pin": "1234",
+      "avatar_emoji": "🚀",
+      "map_theme": "SPACE"
+    },
+    {
+      "name": "Agota",
+      "pin": "1234",
+      "avatar_emoji": "🌸",
+      "map_theme": "ISLAND"
+    }
+  ]
+}
+```
 
-### Chores (20 total)
-Loaded from `Darbai__5_8_m_____prad_ios_paketas.csv`
-- **Easy (🟢):** 5 points each (8 chores)
-- **Medium (🟡):** 10 points each (7 chores)
-- **Hard (🔴):** 15 points each (5 chores)
+**Map themes:** `ISLAND`, `SPACE`, `RAINBOW`
 
-Categories: bedroom, self-care, kitchen, home maintenance, laundry, pets, school
+### Chores (from chores.csv)
+20 chores loaded with emojis - easy to edit in CSV format!
 
-### Rewards (15 total)
-Loaded from `Apdovanojimai___prad_ios_paketas.csv`
-- **Experience (🌟):** 10-120 points
-- **Items (🎁):** 10-200 points
-- **Privileges (👑):** 20 points
+### Rewards (from rewards.csv)
+15 rewards loaded with emojis - easy to edit in CSV format!
 
 ## Usage
 
-### Load Initial Data (Fresh Start)
+### Load Initial Data
 
 ```powershell
-# Load with default settings
+# Load with default settings from JSON/CSV files
 python manage.py load_initial_data
 
 # Reset all data and load fresh
 python manage.py load_initial_data --reset
+```
 
-# Custom parent credentials
-python manage.py load_initial_data --parent-username mano_vardas --parent-password slaptazodis123
+### Customize Your Setup
+
+**1. Edit users.json** to add/modify admin users and kids:
+```json
+{
+  "admin_users": [
+    {
+      "username": "your_username",
+      "password": "your_password",
+      "email": "you@example.com",
+      "is_staff": true,
+      "is_superuser": true
+    }
+  ],
+  "kids": [
+    {
+      "name": "YourKid",
+      "pin": "5678",
+      "avatar_emoji": "🦄",
+      "map_theme": "RAINBOW"
+    }
+  ]
+}
+```
+
+**2. Edit chores.csv** to add/modify chores:
+```csv
+title,points,icon_emoji,description
+My Custom Chore,15,⭐,Description here
+```
+
+**3. Edit rewards.csv** to add/modify rewards:
+```csv
+title,cost_points,icon_emoji,description
+My Custom Reward,100,🏆,Description here
+```
+
+**4. Run the command:**
+```powershell
+python manage.py load_initial_data --reset
 ```
 
 ### Quick Database Rebuild
@@ -67,50 +124,92 @@ python manage.py load_initial_data
 
 ### Update Kids or Chores
 
-To modify the initial setup:
+Simply edit the JSON/CSV files and run:
 
-1. Edit the CSV files in this folder
-2. Run: `python manage.py load_initial_data --reset`
-
-## CSV Format
-
-### Chores CSV (Darbai__5_8_m_____prad_ios_paketas.csv)
-```
-id,pavadinimas,aprašymas,kategorija,sudėtingumas,taškai,dažnumas,amžMin,amžMaks,saugosPastabos
+```powershell
+python manage.py load_initial_data --reset
 ```
 
-**sudėtingumas values:**
-- `lengva` → 🟢 (Easy)
-- `vidutinė` → 🟡 (Medium)
-- `didelė` → 🔴 (Hard)
+## File Formats
 
-### Rewards CSV (Apdovanojimai___prad_ios_paketas.csv)
-```
-id,pavadinimas,tipas,taškai,pastabos
+### users.json Format
+```json
+{
+  "admin_users": [
+    {
+      "username": "string",
+      "password": "string",
+      "email": "string",
+      "is_staff": true,
+      "is_superuser": true
+    }
+  ],
+  "kids": [
+    {
+      "name": "string",
+      "pin": "string (4 digits recommended)",
+      "avatar_emoji": "emoji character",
+      "map_theme": "ISLAND|SPACE|RAINBOW"
+    }
+  ]
+}
 ```
 
-**tipas values:**
-- `daiktinis` → 🎁 (Item)
-- `patirtis` → 🌟 (Experience)
-- `privilegija` → 👑 (Privilege)
+### chores.csv Format
+```csv
+title,points,icon_emoji,description
+```
+
+**Required columns:**
+- `title` - Chore name (string)
+- `points` - Points awarded (integer: 5, 10, 15, etc.)
+- `icon_emoji` - Emoji to display (any emoji)
+- `description` - Optional description (not used in app currently)
+
+### rewards.csv Format
+```csv
+title,cost_points,icon_emoji,description
+```
+
+**Required columns:**
+- `title` - Reward name (string)
+- `cost_points` - Points cost (integer: 10, 20, 50, etc.)
+- `icon_emoji` - Emoji to display (any emoji)
+- `description` - Optional description (not used in app currently)
 
 ## Security Notes
 
 ⚠️ **Important:**
 - Default password `tevai123` is for development only
 - Change passwords immediately in production
-- PINs (1234) should be unique for each child in production
-- Keep CSV files out of version control if they contain sensitive data
+- PINs should be unique for each child
+- Edit `users.json` to set your own credentials before first run
+- Keep `users.json` out of public repositories if it contains real passwords
 
-## Customization
+## Customization Tips
 
-To customize the default setup, edit the `load_initial_data.py` command:
+### Add More Admins
+Edit `users.json` and add another object to the `admin_users` array:
+```json
+{
+  "admin_users": [
+    { "username": "tevai", "password": "tevai123", ... },
+    { "username": "mama", "password": "mama123", "email": "mama@example.com", "is_staff": true, "is_superuser": true }
+  ]
+}
 ```
-chorepoints/core/management/commands/load_initial_data.py
+
+### Add More Kids
+Edit `users.json` and add to the `kids` array:
+```json
+{
+  "kids": [
+    { "name": "Elija", ... },
+    { "name": "Agota", ... },
+    { "name": "Jonas", "pin": "4567", "avatar_emoji": "⚽", "map_theme": "SPACE" }
+  ]
+}
 ```
 
-You can modify:
-- Default parent credentials
-- Kids names, PINs, and emojis
-- Emoji mappings for difficulty/types
-- CSV file paths and parsing logic
+### Customize Chores/Rewards
+Simply edit the CSV files in Excel, LibreOffice, or any text editor. Make sure to keep the header row!

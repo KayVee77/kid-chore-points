@@ -1,0 +1,25 @@
+{
+  "admin_users": [
+    {
+      "username": "tevai",
+      "password": "tevai123",
+      "email": "tevai@example.com",
+      "is_staff": true,
+      "is_superuser": true
+    }
+  ],
+  "kids": [
+    {
+      "name": "Elija",
+      "pin": "1234",
+      "avatar_emoji": "🚀",
+      "map_theme": "SPACE"
+    },
+    {
+      "name": "Agota",
+      "pin": "1234",
+      "avatar_emoji": "🌸",
+      "map_theme": "ISLAND"
+    }
+  ]
+}
