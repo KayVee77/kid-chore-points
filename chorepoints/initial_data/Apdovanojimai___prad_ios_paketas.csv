@@ -1,0 +1,16 @@
+id,pavadinimas,tipas,taškai,pastabos
+r1,Lipdukai ar emoji rinkinys,daiktinis,10,Leisti vaikui pasirinkti dizainą.
+r2,Pasirinkti vakaro pasaką,patirtis,10,Vaikas pasirenka knygą.
+r3,Pasirinkti kelionės dainą/grojaraštį,patirtis,10,Puiku kelionei į mokyklą.
+r4,5 min. šokių vakarėlis,patirtis,10,Šoka kartu suaugęs!
+r5,Papildomos 10 min. ekrano laiko,privilegija,20,Laikytis šeimos taisyklių.
+r6,Pasirinkti desertą,patirtis,20,Namuose ar kavinėje.
+r7,15 min. žaidimo su tėvu/mama,patirtis,20,Vaikas pasirenka žaidimą.
+r8,Žaidimų pasimatymas su draugu,patirtis,30,Suderina suaugęs.
+r9,Burbulų vonia su bombike,patirtis,30,Tik prižiūrint.
+r10,Pasirinkti šeštadienio šeimos veiklą,patirtis,50,"Parkas, piknikas, dviračiai."
+r11,Nauja knyga ar rankdarbių rinkinys,daiktinis,50,Sutarti biudžetą.
+r12,"Mažas žaislas (pvz., mini LEGO)",daiktinis,80,Iš anksto sutarti kainą.
+r13,Filmo vakaras namuose,patirtis,80,Vaikas pasirenka filmą + spragėsiai.
+r14,Išvyka į zoologijos sodą/muziejų,patirtis,120,Planuoti savaitgalį.
+r15,Didesnis žaislas ar ypatinga patirtis,daiktinis,200,Taupymo tikslas; sutaria suaugę.

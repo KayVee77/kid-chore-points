@@ -1,0 +1,21 @@
+id,pavadinimas,aprašymas,kategorija,sudėtingumas,taškai,dažnumas,amžMin,amžMaks,saugosPastabos
+c1,Sutvarkyti žaislus,Sudėti žaislus į dėžes ar lentynas.,miegamasis,lengva,5,kasdien,5,8,Nėra
+c2,Sudėti nešvarius drabužius į krepšį,Visi nešvarūs drabužiai – į skalbinių krepšį.,savipriežiūra,lengva,5,kasdien,5,8,Nėra
+c3,Padėti servetėles ir stalo įrankius,Padėti servetėles ir saugius įrankius ant stalo.,virtuvė,lengva,5,kasdien,5,8,Naudoti tik saugius įrankius.
+c4,Nusinešti savo lėkštę,Nunešti lėkštę prie kriauklės ar indaplovės.,virtuvė,lengva,5,kasdien,5,8,Geriau ne dūžtantys indai.
+c5,Palaistyti augalus (mažu laistytuvu),Lengvai palaistyti kambario augalus.,namų priežiūra,lengva,5,2–3 k./sav.,5,8,Be sunkių laistytuvų.
+c6,Atnešti paštą/laikraštį,Surinkti ir padėti į sutartą vietą.,namų priežiūra,lengva,5,kasdien,5,8,Į gatvę – tik su suaugusiuoju.
+c7,Suderinti kojines poromis,Rasti ir sujungti švarias kojinių poras.,skalbiniai,lengva,5,kartą per savaitę,5,8,Nėra
+c8,Nudulkinti žemas lentynas,Sausa šluoste nuvalyti žemas lentynas ir grindjuostes.,namų priežiūra,lengva,5,kartą per savaitę,5,8,Be purškiklių/chemijos.
+c9,Pasikloti lovą (kaip pavyksta),"Išlyginti paklodę/antklodę, padėti pagalvę.",miegamasis,vidutinė,10,kasdien,5,8,Nėra
+c10,Pamaitinti augintinį (su patikra),"Atmatuoti ir įberti ėdalą, pakeisti vandenį.",gyvūnai,vidutinė,10,kasdien,5,8,Suaugusiojo priežiūra; be žalios mėsos.
+c11,Nuvalyti stalą po valgymo,Drėgna šluoste nuvalyti stalo paviršių.,virtuvė,vidutinė,10,kasdien,5,8,Be stiprių valiklių.
+c12,Susikrauti kuprinę,"Įsidėti namų darbus, gertuvę, užkandį.",mokyklai,vidutinė,10,mokyklos dienomis,5,8,Nėra
+c13,Sukrauti pirkinius į vietas,"Nešti lengvus daiktus, dėti į spinteles/šaldytuvą.",virtuvė,vidutinė,10,kartą per savaitę,5,8,Vengti sunkių ar stiklinių daiktų.
+c14,Pasluoti mažą zoną,Vaikiška šluotele pasluoti virtuvę ar prieškambarį.,namų priežiūra,vidutinė,10,2–3 k./sav.,5,8,Vengti šlapių grindų.
+c15,Rūšiuoti skalbinius (šviesūs/tamsūs),Padėti atskirti skalbinius pagal spalvą/tipą.,skalbiniai,vidutinė,10,kartą per savaitę,5,8,Skalbimo priemonės – nepasiekiamoje vietoje.
+c16,Išsiurbti mažą kilimėlį/kambarį,Lengvu siurbliu išsiurbti mažą zoną.,namų priežiūra,didelė,15,kartą per savaitę,6,8,Suaugusiojo priežiūra – laidai/kištukai.
+c17,Padėti gaminti paprastą vakarienę,"Plauti daržoves, maišyti, dėti pagardus.",virtuvė,didelė,15,kartą per savaitę,6,8,Be peilių/viryklės be suaugusiojo.
+c18,Sulankstyti rankšluosčius ir sudėti,"Sulankstyti rankšluosčius, tvarkingai sukrauti.",skalbiniai,didelė,15,kartą per savaitę,5,8,Nėra
+c19,Išnešti mažą šiukšlių krepšelį,Miegamojo/vonios krepšelį supilti į pagrindinį.,namų priežiūra,didelė,15,kartą per savaitę,6,8,Lengvi maišeliai; pagrindinį maišą riša suaugęs.
+c20,Rūšiuoti atliekas,"Skirti popierių/plastiką/metalą, praskalauti pakuotes.",namų priežiūra,didelė,15,kartą per savaitę,6,8,Vengti aštrių kraštų; stiklą tikrina suaugęs.
