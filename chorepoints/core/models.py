@@ -10,6 +10,20 @@ except ImportError:  # Pillow should be installed; safeguard
 
 User = get_user_model()
 
+# Achievement Milestones Configuration (Infinite Progressive System)
+ACHIEVEMENT_MILESTONES = [
+    {'position': 50, 'name': 'Bronzos ženkliukas', 'icon': '🥉', 'bonus': 10},
+    {'position': 100, 'name': 'Sidabro ženkliukas', 'icon': '🥈', 'bonus': 10},
+    {'position': 200, 'name': 'Aukso ženkliukas', 'icon': '🥇', 'bonus': 15},
+    {'position': 300, 'name': 'Deimanto ženkliukas', 'icon': '💎', 'bonus': 15},
+    {'position': 500, 'name': 'Karūnos ženkliukas', 'icon': '👑', 'bonus': 20},
+    {'position': 750, 'name': 'Žvaigždės ženkliukas', 'icon': '⭐', 'bonus': 20},
+    {'position': 1000, 'name': 'Superžvaigždė', 'icon': '🌟', 'bonus': 25},
+    {'position': 1500, 'name': 'Čempionas', 'icon': '🏆', 'bonus': 30},
+    {'position': 2000, 'name': 'Legenda', 'icon': '🔥', 'bonus': 40},
+    {'position': 3000, 'name': 'Herojus', 'icon': '🚀', 'bonus': 50},
+]
+
 class Kid(models.Model):
     class MapTheme(models.TextChoices):
         ISLAND = "ISLAND", "Island"
@@ -21,6 +35,7 @@ class Kid(models.Model):
     pin = models.CharField(max_length=20)  # Plaintext (MVP only)
     points_balance = models.IntegerField(default=0)
     map_position = models.IntegerField(default=0, help_text="Nuotykių žemėlapio pozicija (suskaičiuoti taškai)")
+    highest_milestone = models.IntegerField(default=0, help_text="Aukščiausias pasiektas milestone pozicija")
     active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     avatar_emoji = models.CharField(max_length=4, blank=True, default="", help_text="Emoji (jei tuščia – generuojama raidė)")
@@ -47,66 +62,75 @@ class Kid(models.Model):
             return self.name[0].upper()
         return "?"
 
-    def get_map_progress(self) -> dict:
-        """Calculate adventure map progress based on reward costs."""
-        from .models import Reward  # Avoid circular import
-        
-        # Get all active rewards ordered by cost_points (milestones)
-        rewards = Reward.objects.filter(parent=self.parent, active=True).order_by('cost_points')
-        
-        milestones = []
-        for reward in rewards:
-            # Determine accessibility status
-            if reward.cost_points <= self.map_position:
-                aria_status = "pasiekta"  # achieved
-            elif self.points_balance >= reward.cost_points:
-                aria_status = "galima prašyti"  # can request
+    def get_current_milestone(self) -> dict:
+        """Get the highest milestone achieved by this kid."""
+        achieved = None
+        for milestone in ACHIEVEMENT_MILESTONES:
+            if self.map_position >= milestone['position']:
+                achieved = milestone
             else:
-                points_needed_for_aria = reward.cost_points - self.points_balance
-                aria_status = f"dar reikia {points_needed_for_aria} taškų"  # still need X points
-            
-            milestones.append({
-                'position': reward.cost_points,
-                'reward_id': reward.id,
-                'reward_title': reward.title,
-                'reward_icon': reward.display_icon,
-                'aria_label': f"{reward.title}, {reward.cost_points} taškai, {aria_status}",
-            })
-        
-        # Find next reward position
-        next_reward_position = None
-        next_reward = None
-        for milestone in milestones:
-            if milestone['position'] > self.map_position:
-                next_reward_position = milestone['position']
-                next_reward = milestone
                 break
+        return achieved
+
+    def get_next_milestone(self) -> dict:
+        """Get the next milestone to achieve."""
+        for milestone in ACHIEVEMENT_MILESTONES:
+            if milestone['position'] > self.map_position:
+                return milestone
+        # If beyond all defined milestones, continue with bonus intervals
+        if self.map_position >= ACHIEVEMENT_MILESTONES[-1]['position']:
+            # After last milestone, give bonuses every 500 points
+            next_interval = ((self.map_position // 500) + 1) * 500
+            return {
+                'position': next_interval,
+                'name': 'Bonus',
+                'icon': '🎁',
+                'bonus': 50
+            }
+        return None
+
+    def get_map_progress(self) -> dict:
+        """Calculate adventure map progress based on achievement milestones."""
+        current_milestone = self.get_current_milestone()
+        next_milestone = self.get_next_milestone()
         
-        # Calculate progress percentage to next reward
+        # Calculate progress to next milestone
         progress_percentage = 0
-        if next_reward_position:
-            # Find previous milestone (or 0 if this is the first)
-            prev_position = 0
-            for milestone in milestones:
-                if milestone['position'] < next_reward_position:
-                    prev_position = milestone['position']
-            
-            segment_length = next_reward_position - prev_position
+        points_needed = 0
+        
+        if next_milestone:
+            prev_position = current_milestone['position'] if current_milestone else 0
+            segment_length = next_milestone['position'] - prev_position
             progress_in_segment = self.map_position - prev_position
             
             if segment_length > 0:
                 progress_percentage = min(100, int((progress_in_segment / segment_length) * 100))
+            
+            points_needed = next_milestone['position'] - self.map_position
         
-        # Calculate points needed to next reward
-        points_needed = next_reward_position - self.map_position if next_reward_position else 0
+        # Build milestone display list
+        milestones = []
+        for milestone in ACHIEVEMENT_MILESTONES:
+            status = 'achieved' if self.map_position >= milestone['position'] else 'locked'
+            aria_status = 'pasiekta' if status == 'achieved' else f"dar reikia {milestone['position'] - self.map_position} taškų"
+            
+            milestones.append({
+                'position': milestone['position'],
+                'name': milestone['name'],
+                'icon': milestone['icon'],
+                'bonus': milestone['bonus'],
+                'status': status,
+                'aria_label': f"{milestone['name']}, {milestone['position']} taškai, {aria_status}",
+            })
         
         return {
             'current_position': self.map_position,
+            'current_milestone': current_milestone,
+            'next_milestone': next_milestone,
             'milestones': milestones,
-            'next_reward_position': next_reward_position,
-            'next_reward': next_reward,
             'progress_percentage': progress_percentage,
             'points_needed': points_needed,
+            'total_points_earned': self.map_position,
         }
 
     def __str__(self):
@@ -192,9 +216,23 @@ class ChoreLog(models.Model):
         with transaction.atomic():
             # Refresh child from DB to avoid race conditions when approving multiple logs
             self.child.refresh_from_db()
+            old_position = self.child.map_position
             self.child.points_balance += self.points_awarded
             self.child.map_position += self.points_awarded
-            self.child.save(update_fields=["points_balance", "map_position"])
+            
+            # Check if any milestones were crossed and award bonuses
+            milestones_crossed = []
+            for milestone in ACHIEVEMENT_MILESTONES:
+                if old_position < milestone['position'] <= self.child.map_position:
+                    milestones_crossed.append(milestone)
+            
+            # Award bonuses for crossed milestones
+            for milestone in milestones_crossed:
+                self.child.points_balance += milestone['bonus']
+                self.child.map_position += milestone['bonus']
+                self.child.highest_milestone = milestone['position']
+            
+            self.child.save(update_fields=["points_balance", "map_position", "highest_milestone"])
             self.status = self.Status.APPROVED
             self.processed_at = timezone.now()
             self.save(update_fields=["status", "processed_at"])
@@ -263,11 +301,25 @@ class PointAdjustment(models.Model):
         super().save(*args, **kwargs)
         if is_new:
             # apply adjustment after creation to have record even if update fails
+            old_position = self.kid.map_position
             self.kid.points_balance += self.points
             # Also update map_position for positive adjustments
             if self.points > 0:
                 self.kid.map_position += self.points
-            self.kid.save(update_fields=["points_balance", "map_position"])
+                
+                # Check if any milestones were crossed and award bonuses
+                milestones_crossed = []
+                for milestone in ACHIEVEMENT_MILESTONES:
+                    if old_position < milestone['position'] <= self.kid.map_position:
+                        milestones_crossed.append(milestone)
+                
+                # Award bonuses for crossed milestones
+                for milestone in milestones_crossed:
+                    self.kid.points_balance += milestone['bonus']
+                    self.kid.map_position += milestone['bonus']
+                    self.kid.highest_milestone = milestone['position']
+            
+            self.kid.save(update_fields=["points_balance", "map_position", "highest_milestone"])
 
     def __str__(self):
         sign = '+' if self.points >= 0 else ''
