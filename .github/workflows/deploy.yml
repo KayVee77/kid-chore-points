@@ -37,10 +37,6 @@ jobs:
               # pytest core/tests  # Enable once tests are added
            continue-on-error: true
 
-         - name: Collect static files
-           working-directory: chorepoints
-           run: python manage.py collectstatic --noinput
-
          - name: Archive application
            run: |
               cd chorepoints

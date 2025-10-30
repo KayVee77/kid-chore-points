@@ -76,6 +76,7 @@ LOCALE_PATHS = [
 ]
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # For collectstatic
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
