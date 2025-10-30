@@ -30,20 +30,19 @@ DATABASES = {
 }
 
 # Azure Storage for Static and Media Files
-DEFAULT_FILE_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-STATICFILES_STORAGE = 'storages.backends.azure_storage.AzureStorage'
-
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME')
 AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY')
-AZURE_CONTAINER = 'media'
-AZURE_STATIC_CONTAINER = 'static'
+
+# Use custom storage backends to separate static and media containers
+STATICFILES_STORAGE = 'chorepoints.storage_backends.AzureStaticStorage'
+DEFAULT_FILE_STORAGE = 'chorepoints.storage_backends.AzureMediaStorage'
 
 # Static files (CSS, JavaScript, Images)
-STATIC_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_STATIC_CONTAINER}/'
+STATIC_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # Media files (uploads)
-MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/{AZURE_CONTAINER}/'
+MEDIA_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/media/'
 
 # Security Settings
 SECURE_SSL_REDIRECT = True
