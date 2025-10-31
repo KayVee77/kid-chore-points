@@ -3,8 +3,8 @@ from django.contrib.auth import get_user_model
 from core.models import Kid, Chore, Reward
 
 KIDS = [
-    ("Elija", "ISLAND"),
-    ("Agota", "SPACE"),
+    ("Elija", "ISLAND", "M"),  # Boy
+    ("Agota", "SPACE", "F"),   # Girl
 ]
 PIN = "1234"
 CHORES = [
@@ -34,18 +34,19 @@ class Command(BaseCommand):
             raise CommandError("Parent user not found. Create superuser first.")
 
         # Kids
-        for name, theme in KIDS:
+        for name, theme, gender in KIDS:
             kid, created = Kid.objects.get_or_create(
                 parent=parent, 
                 name=name, 
-                defaults={'pin': PIN, 'map_theme': theme}
+                defaults={'pin': PIN, 'map_theme': theme, 'gender': gender}
             )
             if not created:
                 kid.pin = PIN
                 kid.active = True
                 kid.map_theme = theme
-                kid.save(update_fields=['pin', 'active', 'map_theme'])
-            self.stdout.write(self.style.SUCCESS(f"Kid ready: {kid.name} (PIN {PIN}, Theme: {theme})"))
+                kid.gender = gender
+                kid.save(update_fields=['pin', 'active', 'map_theme', 'gender'])
+            self.stdout.write(self.style.SUCCESS(f"Kid ready: {kid.name} (PIN {PIN}, Theme: {theme}, Gender: {gender})"))
 
         # Chores
         for title, points, emoji in CHORES:

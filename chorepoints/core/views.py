@@ -18,7 +18,7 @@ def kid_login(request):
         pin = form.cleaned_data["pin"]
         if kid.active and kid.pin == pin:
             request.session["kid_id"] = kid.id
-            messages.success(request, f"Sveikas, {kid.name}!")
+            messages.success(request, kid.get_greeting())
             return redirect("kid_home")
         messages.error(request, "Neteisingas PIN arba paskyra neaktyvi.")
     return render(request, "kid/login.html", {"form": form})

@@ -30,8 +30,14 @@ class Kid(models.Model):
         SPACE = "SPACE", "Kosmosas"
         RAINBOW = "RAINBOW", "Vaivorykštės kelias"
     
+    class Gender(models.TextChoices):
+        MALE = "M", "Berniukas"
+        FEMALE = "F", "Mergaitė"
+        OTHER = "O", "Kita"
+    
     parent = models.ForeignKey(User, on_delete=models.CASCADE, related_name="kids")
     name = models.CharField(max_length=100)
+    gender = models.CharField(max_length=1, choices=Gender.choices, default=Gender.MALE, help_text="Lytis (sveikinimuiui)")
     pin = models.CharField(max_length=20)  # Plaintext (MVP only)
     points_balance = models.IntegerField(default=0)
     map_position = models.IntegerField(default=0, help_text="Nuotykių žemėlapio pozicija (suskaičiuoti taškai)")
@@ -61,6 +67,13 @@ class Kid(models.Model):
         if self.name:
             return self.name[0].upper()
         return "?"
+    
+    def get_greeting(self) -> str:
+        """Return gender-appropriate Lithuanian greeting."""
+        if self.gender == self.Gender.FEMALE:
+            return f"Sveika, {self.name}!"
+        else:
+            return f"Sveikas, {self.name}!"
 
     def get_current_milestone(self) -> dict:
         """Get the highest milestone achieved by this kid."""

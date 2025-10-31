@@ -83,3 +83,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # After any Django auth logout (including admin) go to landing page
 LOGOUT_REDIRECT_URL = '/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Session Security Settings
+SESSION_COOKIE_AGE = 3600  # 1 hour (in seconds)
+SESSION_SAVE_EVERY_REQUEST = False  # Only save when modified
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Clear session when browser closes
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SAMESITE = 'Lax'  # CSRF protection
