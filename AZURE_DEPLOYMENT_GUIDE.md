@@ -1,16 +1,17 @@
-# Azure DevOps Deployment Guide - ChorePoints App
+# Azure Deployment Guide (GitHub Actions) - ChorePoints App
 
-Complete step-by-step guide to deploy the ChorePoints Django app to Azure using Azure DevOps CI/CD pipeline.
+Complete step-by-step guide to deploy the ChorePoints Django app to Azure using GitHub Actions for CI/CD.
 
 ## Table of Contents
 1. [Prerequisites](#prerequisites)
 2. [Azure Resources Setup](#azure-resources-setup)
-3. [Azure DevOps Setup](#azure-devops-setup)
-4. [Application Configuration](#application-configuration)
-5. [CI/CD Pipeline Configuration](#cicd-pipeline-configuration)
-6. [Database Migration](#database-migration)
-7. [Post-Deployment](#post-deployment)
-8. [Troubleshooting](#troubleshooting)
+3. [GitHub Repository & Access](#github-repository--access)
+4. [GitHub Actions Setup](#github-actions-setup)
+5. [Application Configuration](#application-configuration)
+6. [CI/CD Pipeline Configuration](#cicd-pipeline-configuration)
+7. [Database Migration](#database-migration)
+8. [Post-Deployment](#post-deployment)
+9. [Troubleshooting](#troubleshooting)
 
 ---
 
@@ -18,8 +19,7 @@ Complete step-by-step guide to deploy the ChorePoints Django app to Azure using 
 
 ### Required Accounts
 - ✅ Azure account with active subscription ($50 credit)
-- ✅ Azure DevOps account (free tier available)
-- ✅ Access to GitHub repository: `KayVee77/kid-chore-points`
+- ✅ GitHub account with access to repository: `KayVee77/kid-chore-points`
 
 ### Required Tools (for local testing)
 - Python 3.11+
@@ -27,7 +27,7 @@ Complete step-by-step guide to deploy the ChorePoints Django app to Azure using 
 - Git
 
 ### Knowledge Requirements
-- Basic understanding of Git
+- Basic understanding of Git & GitHub
 - Basic Azure portal navigation
 - Basic command line usage
 
@@ -95,7 +95,7 @@ Complete step-by-step guide to deploy the ChorePoints Django app to Azure using 
      * Storage: 32 GiB
    - Authentication: PostgreSQL authentication only
    - Admin username: `chorepoints_admin`
-   - Password: Create strong password (save this!)
+   - Password: Create strong password (save this securely!)
    - Click "Next: Networking"
    ```
 
@@ -146,76 +146,79 @@ Complete step-by-step guide to deploy the ChorePoints Django app to Azure using 
    ```
    - In storage account, click "Access keys" (left menu)
    - Copy "Connection string" from key1
-   - Save this for later configuration
+   - Format: DefaultEndpointsProtocol=https;AccountName=<name>;AccountKey=<key>;EndpointSuffix=core.windows.net
+   - Save this for later configuration (DO NOT commit to Git)
    ```
 
 ---
 
-## Azure DevOps Setup
+## GitHub Repository & Access
 
-### Step 1: Create Azure DevOps Organization and Project
+### Step 1: Confirm Repository Access
+1. Visit https://github.com/KayVee77/kid-chore-points and verify you have push or fork permissions.
+2. If you cannot push directly:
+   - Click **Fork** → personal namespace → keep branch name `main`.
+   - Update remote origin locally to point to your fork.
 
-1. **Create Organization**
-   ```
-   - Go to https://dev.azure.com
-   - Sign in with Microsoft account
-   - Click "New organization"
-   - Organization name: `chorepoints-devops` (or your choice)
-   - Region: Choose closest to you
-   - Click "Continue"
-   ```
+### Step 2: Clone Locally (optional but recommended)
+```bash
+cd c:\Users\User\Documents\python_apps
+git clone https://github.com/<your-account>/kid-chore-points.git
+cd kid-chore-points
+```
+- Work on feature branches locally, then push to GitHub.
+- Keep `main` protected so only reviewed changes land there.
 
-2. **Create Project**
-   ```
-   - Click "+ New project"
-   - Project name: `ChorePoints`
-   - Visibility: Private
-   - Version control: Git
-   - Work item process: Agile
-   - Click "Create"
-   ```
+### Step 3: Enable GitHub Actions
+1. In the GitHub repo, go to **Settings → Actions → General**.
+2. Ensure "Allow all actions and reusable workflows" is enabled.
+3. If Actions were disabled for a fork, click **Enable GitHub Actions** on the Actions tab.
 
-### Step 2: Connect GitHub Repository
+---
 
-1. **Import Repository**
-   ```
-   - In your project, go to "Repos" → "Files"
-   - Click "Import" button at top
-   - Clone URL: https://github.com/KayVee77/kid-chore-points.git
-   - Requires authorization: Yes
-   - Click "Import"
-   ```
+## GitHub Actions Setup
 
-   OR if you want to keep syncing with GitHub:
+### Step 1: Create Azure Service Principal (for deployments)
+We will authenticate the GitHub workflow against Azure via a service principal.
 
-2. **Set up GitHub Connection** (Alternative - keeps sync with GitHub)
-   ```
-   - Go to Project Settings (bottom left)
-   - Click "Service connections" under Pipelines
-   - Click "New service connection"
-   - Choose "GitHub"
-   - Click "Next"
-   - Choose "Grant authorization" or "Personal access token"
-   - Follow prompts to authorize
-   - Connection name: `GitHub-KayVee77`
-   - Click "Save"
-   ```
+```bash
+az ad sp create-for-rbac \
+  --name chorepoints-gh-deploy \
+  --role contributor \
+  --scopes /subscriptions/7a4e0763-6e2c-4871-aa4f-488ddb0c6df9/resourceGroups/chorepoints-rg \
+  --sdk-auth
+```
 
-### Step 3: Create Service Connection to Azure
+- Replace `<SUBSCRIPTION_ID>` with the ID shown in the Azure Portal (Home → Subscriptions).
+- Copy the JSON output. You will paste it into a GitHub secret in Step 2.
 
-1. **Create Azure Service Principal**
-   ```
-   - In Azure DevOps, go to Project Settings → Service connections
-   - Click "New service connection"
-   - Select "Azure Resource Manager" → "Next"
-   - Authentication method: "Service principal (automatic)"
-   - Scope level: Subscription
-   - Subscription: Select your Azure subscription
-   - Resource group: `chorepoints-rg`
-   - Service connection name: `Azure-ChorePoints`
-   - Grant access permission to all pipelines: ✅ Check this
-   - Click "Save"
-   ```
+### Step 2: Add Required GitHub Secrets
+In the GitHub repo → **Settings → Secrets and variables → Actions → New repository secret**, create the following entries:
+
+| Secret Name | Value |
+|-------------|-------|
+| `AZURE_CREDENTIALS` | Entire JSON from the service principal command above |
+| `DJANGO_SECRET_KEY` | `secrets.token_urlsafe(50)` output |
+| `DB_PASSWORD` | Strong PostgreSQL password you set earlier |
+| `AZURE_ACCOUNT_KEY` | Storage account key (Access keys → key1) |
+
+Also add non-secret configuration as repository variables (same screen → **Variables** tab) so they can be reused inside workflows:
+
+| Variable Name | Example Value |
+|---------------|---------------|
+| `AZURE_WEBAPP_NAME` | `chorepoints-app` |
+| `AZURE_RG` | `chorepoints-rg` |
+| `AZURE_LOCATION` | `westeurope` |
+| `DB_HOST` | `chorepoints-db.postgres.database.azure.com` |
+| `DB_NAME` | `chorepoints_db` |
+| `DB_USER` | `chorepoints_admin` |
+| `AZURE_ACCOUNT_NAME` | `chorepointsstorage` |
+
+> Tip: keep credentials out of version control. GitHub Actions automatically masks secrets in logs.
+
+### Step 3: (Optional) Configure Branch Protection
+- In **Settings → Branches**, add a protection rule for `main`.
+- Require PR reviews and successful GitHub Action runs before merging.
 
 ---
 
@@ -393,147 +396,90 @@ chmod +x chorepoints/startup.sh
 
 ## CI/CD Pipeline Configuration
 
-### Step 1: Create Azure Pipeline YAML
-
-Create `azure-pipelines.yml` in the repository root:
+### Step 1: Create GitHub Actions Workflow
+Create the directory `.github/workflows/` (if it does not exist) and add `deploy.yml` with the following content:
 
 ```yaml
-# Azure DevOps Pipeline for ChorePoints Django App
-# Builds, tests, and deploys to Azure App Service
+name: Deploy ChorePoints
 
-trigger:
-  branches:
-    include:
-    - main
-    - feature/*
-  paths:
-    exclude:
-    - README.md
-    - docs/*
+on:
+   push:
+      branches: ["main"]
+   pull_request:
+      branches: ["main"]
+   workflow_dispatch:
 
-pool:
-  vmImage: 'ubuntu-latest'
+env:
+   PYTHON_VERSION: "3.11"
+   DJANGO_SETTINGS_MODULE: "chorepoints.settings"
 
-variables:
-  pythonVersion: '3.11'
-  azureServiceConnection: 'Azure-ChorePoints'
-  webAppName: 'chorepoints-app'
-  
-stages:
-- stage: Build
-  displayName: 'Build and Test'
-  jobs:
-  - job: BuildJob
-    displayName: 'Build Django App'
-    steps:
-    
-    - task: UsePythonVersion@0
-      displayName: 'Use Python $(pythonVersion)'
-      inputs:
-        versionSpec: '$(pythonVersion)'
-    
-    - script: |
-        python -m pip install --upgrade pip
-        pip install -r chorepoints/requirements.txt
-      displayName: 'Install dependencies'
-      workingDirectory: '$(System.DefaultWorkingDirectory)'
-    
-    - script: |
-        pip install pytest pytest-django
-        # Add your tests here when ready
-        # pytest chorepoints/core/tests/
-      displayName: 'Run tests'
-      workingDirectory: '$(System.DefaultWorkingDirectory)'
-      continueOnError: true
-    
-    - script: |
-        cd chorepoints
-        python manage.py collectstatic --noinput
-      displayName: 'Collect static files'
-      env:
-        DJANGO_SETTINGS_MODULE: 'chorepoints.settings'
-    
-    - task: ArchiveFiles@2
-      displayName: 'Archive application'
-      inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/chorepoints'
-        includeRootFolder: false
-        archiveType: 'zip'
-        archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
-        replaceExistingArchive: true
-    
-    - task: PublishBuildArtifacts@1
-      displayName: 'Publish artifacts'
-      inputs:
-        pathToPublish: '$(Build.ArtifactStagingDirectory)'
-        artifactName: 'drop'
+jobs:
+   build-and-deploy:
+      runs-on: ubuntu-latest
 
-- stage: Deploy
-  displayName: 'Deploy to Azure'
-  dependsOn: Build
-  condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  jobs:
-  - deployment: DeployWeb
-    displayName: 'Deploy to Azure App Service'
-    environment: 'production'
-    strategy:
-      runOnce:
-        deploy:
-          steps:
-          - task: AzureWebApp@1
-            displayName: 'Deploy Azure Web App'
-            inputs:
-              azureSubscription: '$(azureServiceConnection)'
-              appType: 'webAppLinux'
-              appName: '$(webAppName)'
-              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'
-              runtimeStack: 'PYTHON|3.11'
-              startUpCommand: 'bash startup.sh'
+      steps:
+         - name: Checkout source
+            uses: actions/checkout@v4
+
+         - name: Set up Python ${{ env.PYTHON_VERSION }}
+            uses: actions/setup-python@v5
+            with:
+               python-version: ${{ env.PYTHON_VERSION }}
+
+         - name: Install dependencies
+            working-directory: chorepoints
+            run: |
+               python -m pip install --upgrade pip
+               pip install -r requirements.txt
+
+         - name: Run unit tests (placeholder)
+            working-directory: chorepoints
+            run: |
+               pip install pytest pytest-django
+               # pytest core/tests  # Enable once tests are added
+            continue-on-error: true
+
+         - name: Collect static files
+            working-directory: chorepoints
+            run: python manage.py collectstatic --noinput
+
+         - name: Archive application
+            run: |
+               cd chorepoints
+               zip -r ../chorepoints-package.zip . -x "__pycache__/*" "*.pyc" "*.pyo" "*.pytest_cache/*"
+
+         - name: Azure login
+            uses: azure/login@v2
+            with:
+               creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+         - name: Deploy to Azure Web App
+            uses: azure/webapps-deploy@v3
+            with:
+               app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+               package: chorepoints-package.zip
+               slot-name: Production
+               startup-command: "bash startup.sh"
+
+         - name: Logout
+            if: always()
+            run: az logout
 ```
 
-### Step 2: Configure Pipeline in Azure DevOps
+> Adjust the testing step once you add formal test coverage. Fail the build by removing `continue-on-error` when ready.
 
-1. **Create Pipeline**
-   ```
-   - In Azure DevOps, go to "Pipelines" → "Pipelines"
-   - Click "New pipeline"
-   - Select "Azure Repos Git"
-   - Select your repository
-   - Choose "Existing Azure Pipelines YAML file"
-   - Path: `/azure-pipelines.yml`
-   - Click "Continue"
-   ```
+### Step 2: Commit the Workflow
+1. Commit `deploy.yml` to the repository (ideally via pull request).
+2. Verify that GitHub automatically detects the new workflow under the **Actions** tab.
 
-2. **Configure Pipeline Variables**
-   ```
-   - Click "Variables" button (top right)
-   - Add these variables:
-   
-   Variable Name              | Value                                    | Secret?
-   ---------------------------|------------------------------------------|--------
-   DJANGO_SECRET_KEY          | (generate random 50 char string)        | ✅ Yes
-   DB_NAME                    | chorepoints_db                          | No
-   DB_USER                    | chorepoints_admin                       | No
-   DB_PASSWORD                | (your PostgreSQL password)              | ✅ Yes
-   DB_HOST                    | chorepoints-db.postgres.database.azure.com | No
-   AZURE_ACCOUNT_NAME         | chorepointsstorage                      | No
-   AZURE_ACCOUNT_KEY          | (your storage account key)              | ✅ Yes
-   WEBSITE_HOSTNAME           | chorepoints-app.azurewebsites.net       | No
-   ```
+### Step 3: Run the Pipeline
+1. Push to `main` or click **Run workflow** (workflow_dispatch) to trigger manually.
+2. Monitor the job logs in GitHub Actions.
+3. On first run, expect ~8–10 minutes (dependency install + deployment).
 
-   To generate SECRET_KEY in Python:
-   ```python
-   import secrets
-   print(secrets.token_urlsafe(50))
-   ```
-
-3. **Save and Run Pipeline**
-   ```
-   - Click "Save and run"
-   - Add commit message: "Add Azure DevOps CI/CD pipeline"
-   - Click "Save and run"
-   - Monitor the pipeline execution
-   ```
+### Step 4: Approve & Merge Pull Requests
+- Configure branch protection so PRs must pass the `Deploy ChorePoints` workflow before merging into `main`.
+- For feature development, target the default branch; the workflow will run in "build only" mode on PRs and deploy only on `push` to `main`.
 
 ---
 
@@ -541,34 +487,94 @@ stages:
 
 ### Step 1: Configure App Service Environment Variables
 
+**Option A: Using Azure CLI** (Recommended - Fast!)
+
+First, login to Azure and set your subscription:
+```powershell
+# Login to Azure
+az login
+
+# Set your subscription (replace with your subscription name or ID)
+az account set --subscription "7a4e0763-6e2c-4871-aa4f-488ddb0c6df9"
+```
+
+Now configure all environment variables with one command:
+```powershell
+# Use your existing Django secret key
+$DJANGO_SECRET="VYYuFkyTmwQgCHx_0UC3qtYB1NG_EeyJ-k3sNcooYjFZLZwGz29uY5uFg-57KF-FV8o"
+
+# Get your storage account key
+$AZURE_KEY=$(az storage account keys list --resource-group chorepoints-rg-us --account-name chorepointsstorage --query "[0].value" -o tsv)
+
+# Configure all app settings at once
+az webapp config appsettings set `
+  --resource-group chorepoints-rg-us `
+  --name elija-agota `
+  --settings `
+    DJANGO_SECRET_KEY="$DJANGO_SECRET" `
+    DJANGO_SETTINGS_MODULE="chorepoints.settings_production" `
+    DB_NAME="chorepoints_db" `
+    DB_USER="chorepoints_admin" `
+    DB_PASSWORD="<your-db-password>" `
+    DB_HOST="chorepoints-db.postgres.database.azure.com" `
+    AZURE_ACCOUNT_NAME="chorepointsstorage" `
+    AZURE_ACCOUNT_KEY="$AZURE_KEY" `
+    SCM_DO_BUILD_DURING_DEPLOYMENT="true"
+```
+
+Configure the startup command:
+```powershell
+az webapp config set `
+  --resource-group chorepoints-rg-us `
+  --name elija-agota `
+  --startup-file "bash startup.sh"
+```
+
+Verify the settings:
+```powershell
+# List all app settings (passwords will be masked)
+az webapp config appsettings list `
+  --resource-group chorepoints-rg-us `
+  --name elija-agota `
+  --output table
+```
+
+**Option B: Using Azure Portal** (Manual)
+
 1. **Add Configuration Settings**
    ```
-   - Go to Azure Portal → Your App Service
+   - Go to https://portal.azure.com
+   - Navigate to your App Service "elija-agota"
    - Click "Configuration" (left menu under Settings)
    - Click "New application setting" for each:
-   
-   Name                       | Value
-   ---------------------------|------------------------------------------
-   DJANGO_SECRET_KEY          | (copy from pipeline variables)
-   DJANGO_SETTINGS_MODULE     | chorepoints.settings_production
-   DB_NAME                    | chorepoints_db
-   DB_USER                    | chorepoints_admin
-   DB_PASSWORD                | (your PostgreSQL password)
-   DB_HOST                    | chorepoints-db.postgres.database.azure.com
-   AZURE_ACCOUNT_NAME         | chorepointsstorage
-   AZURE_ACCOUNT_KEY          | (your storage account key)
-   SCM_DO_BUILD_DURING_DEPLOYMENT | true
    ```
+   
+   | Name | Value |
+   |------|-------|
+   | `DJANGO_SECRET_KEY` | Generate with: `python -c "import secrets; print(secrets.token_urlsafe(50))"` |
+   | `DJANGO_SETTINGS_MODULE` | `chorepoints.settings_production` |
+   | `DB_NAME` | `chorepoints_db` |
+   | `DB_USER` | `chorepoints_admin` |
+   | `DB_PASSWORD` | Your PostgreSQL password |
+   | `DB_HOST` | `chorepoints-db.postgres.database.azure.com` |
+   | `AZURE_ACCOUNT_NAME` | `chorepointsstorage` |
+   | `AZURE_ACCOUNT_KEY` | Get from: Portal → Storage account "chorepointsstorage" → Access keys → key1 → Show → Copy |
+   | `SCM_DO_BUILD_DURING_DEPLOYMENT` | `true` |
+   
+   - Click "OK" after each setting
+   - Click "Save" at the top to apply all changes
+   - Click "Continue" when warned about restart
 
 2. **Configure Startup Command**
    ```
    - Still in Configuration
-   - Go to "General settings" tab
+   - Click "General settings" tab
    - Startup Command: `bash startup.sh`
    - Stack: Python
    - Major version: 3
    - Minor version: 11
    - Click "Save" (top)
+   - Click "Continue" to restart the app
    ```
 
 ### Step 2: Run Initial Migrations
@@ -813,8 +819,8 @@ python manage.py collectstatic --noinput
 
 **Pipeline Logs**:
 ```
-- Azure DevOps → Pipelines → Select run
-- Click on any stage/job to see detailed logs
+- GitHub → Actions → Select workflow run
+- Expand each job/step to inspect logs and artifacts
 ```
 
 ### Performance Optimization Tips
@@ -917,9 +923,9 @@ Before going live:
 ## Support and Resources
 
 ### Azure Documentation
-- App Service: https://docs.microsoft.com/azure/app-service/
-- PostgreSQL: https://docs.microsoft.com/azure/postgresql/
-- DevOps: https://docs.microsoft.com/azure/devops/
+- App Service: https://learn.microsoft.com/azure/app-service/
+- PostgreSQL: https://learn.microsoft.com/azure/postgresql/
+- GitHub Actions: https://docs.github.com/actions
 
 ### Django Resources
 - Deployment: https://docs.djangoproject.com/en/5.0/howto/deployment/
