@@ -30,19 +30,28 @@ Django 5 MVP for managing kids' chores & rewards with approval workflow. **Lithu
 - Static files served from Azure Blob Storage
 
 ### Azure Management Commands
+**IMPORTANT**: Never attempt to run SSH commands automatically. Always ask the user to run Azure SSH commands manually.
+
 ```bash
-# SSH into production (requires Azure CLI)
+# SSH into production (USER RUNS THIS MANUALLY)
 az webapp ssh --name elija-agota --resource-group chorepoints-rg-us
 
+# Then inside SSH session (USER RUNS THESE):
+cd /home/site/wwwroot
+python manage.py migrate core
+# or other Django management commands
+```
+
+Non-SSH commands (agent can run these):
+```bash
 # Restart production app
 az webapp restart --name elija-agota --resource-group chorepoints-rg-us
 
 # View logs
 az webapp log tail --name elija-agota --resource-group chorepoints-rg-us
 
-# Run migrations on production (inside SSH)
-cd /home/site/wwwroot
-python manage.py migrate core
+# Deploy files
+az webapp deploy --resource-group chorepoints-rg-us --name elija-agota --src-path <file> --target-path <path> --type static
 ```
 
 ### Localhost vs Production
