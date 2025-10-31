@@ -3,6 +3,53 @@
 ## Project Overview
 Django 5 MVP for managing kids' chores & rewards with approval workflow. **Lithuanian-first UI** (LANGUAGE_CODE=lt) for kids; admin uses Django default. Session-based kid authentication via PIN (no Django User).
 
+## 🚀 Production Environment (Azure)
+
+**CRITICAL**: Production app is live at **https://elija-agota.azurewebsites.net/**
+
+### Production Details
+- **App Name**: elija-agota
+- **Resource Group**: chorepoints-rg-us
+- **Region**: North Central US
+- **Runtime**: Python 3.11 on Linux
+- **Database**: Azure PostgreSQL Flexible Server v15 (`chorepoints-db`)
+- **Storage**: Azure Blob Storage (`chorepointsstorage`, Standard_LRS)
+- **Parent Login**: `tevai` (password stored securely, not in repo)
+- **Kids**: Elija (PIN: 1234, Theme: ISLAND, Gender: M), Agota (PIN: 1234, Theme: SPACE, Gender: F)
+
+### Deployment Pipeline
+- **GitHub Actions** auto-deploys from `main` branch to Azure
+- `startup.sh` runs on Azure startup: installs deps → collectstatic → migrate → starts Gunicorn
+- **DO NOT push directly to `main`** - create feature branches and test locally first
+- All changes to `main` trigger immediate production deployment
+
+### Production Settings (`settings_production.py`)
+- `DEBUG=False`
+- Uses environment variables: `DJANGO_SECRET_KEY`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `AZURE_ACCOUNT_NAME`
+- Session security: 1-hour timeout, expires on browser close, secure HTTPS-only cookies
+- Static files served from Azure Blob Storage
+
+### Azure Management Commands
+```bash
+# SSH into production (requires Azure CLI)
+az webapp ssh --name elija-agota --resource-group chorepoints-rg-us
+
+# Restart production app
+az webapp restart --name elija-agota --resource-group chorepoints-rg-us
+
+# View logs
+az webapp log tail --name elija-agota --resource-group chorepoints-rg-us
+
+# Run migrations on production (inside SSH)
+cd /home/site/wwwroot
+python manage.py migrate core
+```
+
+### Localhost vs Production
+- **Localhost** (`./chorepoints/dev.ps1`): SQLite, DEBUG=True, no Azure storage, for development only
+- **Production** (Azure): PostgreSQL, DEBUG=False, Azure Blob Storage, HTTPS required
+- Never test database migrations directly on production - test locally first
+
 ## Architecture & Key Patterns
 
 ### Core Domain Models (`core/models.py`)
@@ -36,25 +83,36 @@ Fallback: emoji → monogram (first letter) for avatars; default emoji for chore
 
 ## Development Workflow
 
-### Quick Start (Windows PowerShell)
+### Branch Strategy
+- **`main` branch**: Auto-deploys to production Azure - DO NOT push untested code
+- **Feature branches**: Create for all development work (`git checkout -b feature/my-feature`)
+- **Testing**: Always test locally with `dev.ps1` before merging to main
+
+### Quick Start (Windows PowerShell - Local Development Only)
 ```powershell
 ./chorepoints/dev.ps1          # Auto venv, deps, migrate, runserver, opens browser
 ./chorepoints/dev.ps1 -Reset   # Recreate venv from scratch
 ```
 Script uses requirements.txt hash caching (`.venv/.req_hash`) to skip reinstalls.
+**Localhost**: http://localhost:8000/ (SQLite, DEBUG mode)
 
-### Essential Commands
+### Essential Commands (Local Development)
 ```bash
 # Seed Lithuanian demo data (Elija, Agota, default chores/rewards with emoji)
 python manage.py seed_demo_lt --username <parent_username>
 
-# Migrations (6 total as of 0006)
+# Migrations (12 total as of 0012_add_kid_gender)
 python manage.py makemigrations core
 python manage.py migrate core
 
-# Create parent account
+# Create local parent account for testing
 python manage.py createsuperuser
 ```
+
+### Data Migrations
+- **Migration 0011**: Loads initial chores (34) and rewards (21) from CSV files in `initial_data/`
+- CSV files define Lithuanian chores/rewards with emoji icons and point values
+- Safe to run multiple times (uses `get_or_create`)
 
 ### File Structure Convention
 - **Single app**: `core/` (models, views, admin, templates, management commands)
@@ -93,13 +151,36 @@ Edit `core/management/commands/seed_demo_lt.py` to add tuples like `("Title", po
 - Check pending duplicate prevention: submit same chore twice → should show "Šis darbas jau laukia patvirtinimo."
 
 ## Git Conventions
-- Exclude: `*.pyc`, `__pycache__/`, `db.sqlite3`, `media/`, `.venv/` (see .gitignore)
-- Migrations committed (0001-0006); db.sqlite3 ignored
-- One nested .git was removed (chorepoints/.git) - repo root is parent folder
+- Exclude: `*.pyc`, `__pycache__/`, `db.sqlite3`, `media/`, `.venv/`, `staticfiles/`, `azure-logs.zip` (see .gitignore)
+- Migrations committed (0001-0012); db.sqlite3 never committed (local only)
+- **Never commit secrets**: passwords, API keys, database credentials
+- Repo root: `django_kid_rewards/` (not `chorepoints/` subfolder)
+- Always create feature branches for development: `git checkout -b feature/description`
+- Test changes locally before pushing to `main` (auto-deploys to production)
+
+## Security Features
+- **Session Security**: 1-hour timeout, expires on browser close, HttpOnly cookies, SameSite=Lax
+- **Kid Gender Field**: For Lithuanian gender-specific greetings (Sveikas/Sveika)
+- **HTTPS Only** in production with secure cookies
+- **CSRF Protection**: Django middleware + SameSite cookies
 
 ## Known Limitations (MVP Scope)
-- PIN stored plaintext (no hashing)
+- Kid PIN stored plaintext (no hashing) - document as security limitation
 - No rate limiting on chore submissions
 - No unique DB constraint for PENDING duplicates (logic in views only)
-- SQLite only (not production-ready)
 - No REST API; server-rendered Django templates with minimal JS (confetti canvas, avatar selection)
+- No automated tests yet
+
+## Quick Reference: User Accounts
+
+### Production (Azure)
+- **Parent**: `tevai` (admin account, password NOT in repo)
+- **Kids**: 
+  - Elija (M, PIN 1234, Island theme)
+  - Agota (F, PIN 1234, Space theme)
+- **Admin URL**: https://elija-agota.azurewebsites.net/admin/
+- **Kid Login**: https://elija-agota.azurewebsites.net/kid/login/
+
+### Local Development
+- Create your own test accounts with `python manage.py createsuperuser`
+- Use `seed_demo_lt` command to populate test kids and chores/rewards
