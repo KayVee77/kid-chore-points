@@ -3,11 +3,13 @@ name: Deploy ChorePoints
 on:
    push:
       branches: ["main"]
+   pull_request:
+      branches: ["main"]
    workflow_dispatch:
 
 env:
    PYTHON_VERSION: "3.11"
-   AZURE_WEBAPP_NAME: elija-agota
+   DJANGO_SETTINGS_MODULE: "chorepoints.settings"
 
 jobs:
    build-and-deploy:
@@ -22,26 +24,37 @@ jobs:
            with:
               python-version: ${{ env.PYTHON_VERSION }}
 
-         - name: Create deployment package
+         - name: Install dependencies
+           working-directory: chorepoints
+           run: |
+              python -m pip install --upgrade pip
+              pip install -r requirements.txt
+
+         - name: Run unit tests (placeholder)
+           working-directory: chorepoints
+           run: |
+              pip install pytest pytest-django
+              # pytest core/tests  # Enable once tests are added
+           continue-on-error: true
+
+         - name: Archive application
            run: |
               cd chorepoints
-              zip -r ../app.zip . -x "*.pyc" "*__pycache__*" "*.pytest_cache*" ".git*" "db.sqlite3" "media/*"
+              zip -r ../chorepoints-package.zip . -x "__pycache__/*" "*.pyc" "*.pyo" "*.pytest_cache/*"
 
-         - name: Azure Login
-           uses: azure/login@v1
+         - name: Azure login
+           uses: azure/login@v2
            with:
               creds: ${{ secrets.AZURE_CREDENTIALS }}
 
          - name: Deploy to Azure Web App
-           uses: azure/webapps-deploy@v2
+           uses: azure/webapps-deploy@v3
            with:
-              app-name: ${{ env.AZURE_WEBAPP_NAME }}
-              package: ./app.zip
-           env:
-              SCM_DO_BUILD_DURING_DEPLOYMENT: false
-              ENABLE_ORYX_BUILD: false
+              app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+              package: chorepoints-package.zip
+              slot-name: Production
+              startup-command: "bash startup.sh"
 
-         - name: Azure Logout
+         - name: Logout
            if: always()
-           run: |
-              az logout
+           run: az logout
