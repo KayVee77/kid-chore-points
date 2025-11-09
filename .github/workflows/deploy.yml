@@ -37,10 +37,19 @@ jobs:
               # pytest core/tests  # Enable once tests are added
            continue-on-error: true
 
-         - name: Archive application
+         - name: Create deployment archive
+           working-directory: chorepoints
            run: |
-              cd chorepoints
-              zip -r ../chorepoints-package.zip . -x "__pycache__/*" "*.pyc" "*.pyo" "*.pytest_cache/*"
+              rm -f ../chorepoints.zip
+              zip -r ../chorepoints.zip . \
+                 -x "*.git*" \
+                 -x "*.pyc" \
+                 -x "*/__pycache__/*" \
+                 -x "*/.pytest_cache/*" \
+                 -x "*/.mypy_cache/*" \
+                 -x ".venv/*" \
+                 -x "env/*" \
+                 -x "venv/*"
 
          - name: Azure login
            uses: azure/login@v2
@@ -51,7 +60,8 @@ jobs:
            uses: azure/webapps-deploy@v3
            with:
               app-name: ${{ vars.AZURE_WEBAPP_NAME }}
-              package: chorepoints-package.zip
+              package: ./chorepoints.zip
+              clean: true
               slot-name: Production
               startup-command: "bash startup.sh"
 
