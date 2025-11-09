@@ -1,0 +1,3 @@
+Test #3 - With Oryx disabled at Azure level
+Timestamp: 2025-11-09 21:35
+This should deploy ALL files from the zip!
