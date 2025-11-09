@@ -1,35 +1,18 @@
 title,points,icon_emoji,description
-Sutvarkyti žaislus,3,🧸,Sudėti žaislus į dėžes ar lentynas
-Sudėti nešvarius drabužius,3,👕,Visi nešvarūs drabužiai į skalbinių krepšį
-Nusinešti savo lėkštę,3,🍽️,Nunešti lėkštę prie kriauklės ar indaplovės
-Suderinti kojines poromis,3,🧦,Rasti ir sujungti švarias kojinių poras
-Nudulkinti žemas lentynas,3,🧹,Sausa šluoste nuvalyti žemas lentynas
-Rytinė rutina laiku (apsirengti dantys pasiruošęs),3,⏰,Be priminimų
+Sutvarkyti žaislus,5,🧸,Sudėti žaislus į dėžes ar lentynas
+Nusinešti savo lėkštę,2,🍽️,Nunešti lėkštę prie kriauklės ar indaplovės
+Suderinti kojines poromis,10,🧦,Rasti ir sujungti švarias kojinių poras
+Rytinė rutina laiku (apsirengti dantys pasiruošęs),10,⏰,Be priminimų
+Vakaro rutina (pasiruošti miegui iki 21:15),15,⏰,Be priminimų
 Pasikloti lovą,5,🛏️,Išlyginti paklodę/antklodę padėti pagalvę
 Susikrauti kuprinę,5,🎒,Įsidėti namų darbus gertuvę užkandį
-Išnešti mažą šiukšlių krepšelį,5,🗑️,Miegamojo/vonios krepšelį supilti į pagrindinį
-Palaistyti augalus,5,🪴,Lengvai palaistyti kambario augalus
-Atnešti paštą,5,📬,Surinkti ir padėti į sutartą vietą
-Padėti servetėles ir įrankius,5,🍽️,Padėti servetėles ir saugius įrankius ant stalo
-Pamaitinti augintinį,8,🐕,Atmatuoti ėdalą ir pakeisti vandenį
-Nuvalyti stalą po valgymo,8,🧽,Drėgna šluoste nuvalyti stalo paviršių
-Sukrauti pirkinius,8,🛒,Nešti lengvus daiktus dėti į spinteles
-Pasluoti mažą zoną,8,🧹,Vaikiška šluotele pasluoti virtuvę ar prieškambarį
-Rūšiuoti skalbinius,8,👔,Atskiriant pagal spalvą/tipą
-Išplauti indaplovę / sukrauti indus,10,🍽️,Tvarkingai sudėti ar išimti
-Namų darbai be priminimų,10,📚,Užbaigti laiku
-Išsiurbti kilimėlį,12,🧹,Lengvu siurbliu išsiurbti mažą zoną
-Padėti gaminti vakarienę,12,👨‍🍳,Plauti daržoves maišyti dėti pagardus
-Sulankstyti rankšluosčius,12,🧺,Sulankstyti ir sudėti
-Rūšiuoti atliekas,12,♻️,Skirti popierių/plastiką/metalą praskalauti pakuotes
-Išnešti pagrindines šiukšles į konteinerį,12,🗑️,Išnešti iki lauko konteinerio
+Nuvalyti stalą po valgymo,5,🧽,Drėgna šluoste nuvalyti stalo paviršių
+Sukrauti pirkinius,10,🛒,Nešti lengvus daiktus dėti į spinteles
+Sukrauti indus į indaplovę,10,🍽️,Tvarkingai sudėti
+Iškrausti indaplovę,10,🍽️,Tvarkingai sudėti indus į spinteles
+Namų darbai be priminimų,5,📚,Užbaigti laiku
+Padėti gaminti vakarienę,10,👨‍🍳,Plauti daržoves maišyti dėti pagardus
+Išnešti pagrindines šiukšles į konteinerį,10,🗑️,Išnešti iki lauko konteinerio
 Išvalyti vonios kriauklę ir stalviršį,15,🧼,Su priemonėmis ir priežiūra
-Išplauti grindis (viena zona),15,🧽,Su priemonėmis ir kibiru
-Išsiurbti kambarį (pilnai),15,🧹,Kampai ir po baldais (jei įmanoma)
-Nuplauti automobilį (su pagalba),20,🚗,Išorė ir langai
-Išvalyti tualetą (su priežiūra),20,🚻,Pagal instrukcijas
-Pasivaikščioti su šunimi ~20 min,20,🐶,Suaugusiam prižiūrint
-Prižiūrėti jaunesnį brolį/sesę 30 min (suaugęs namie),20,👶,Atsakinga priežiūra
-Pakeisti patalynę,20,🛏️,Nuimti/sudėti švarią
-Nupjauti veją / sugrėbti lapus (zona),25,🍃,Su priežiūra
-Savaitės visų kasdienių darbų serija (bonus),15,🏅,Be praleidimų 7 dienas iš eilės
+Išsiurbti kambarį (pilnai),20,🧹,Kampai ir po baldais (jei įmanoma)
+Prižiūrėti jaunesnį sesę 30 min,10,👶,Atsakinga priežiūra
