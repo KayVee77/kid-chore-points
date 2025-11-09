@@ -18,16 +18,20 @@ Django 5 MVP for managing kids' chores & rewards with approval workflow. **Lithu
 - **Kids**: Elija (PIN: 1234, Theme: ISLAND, Gender: M), Agota (PIN: 1234, Theme: SPACE, Gender: F)
 
 ### Deployment Pipeline
-- **GitHub Actions** auto-deploys from `main` branch to Azure
+- **GitHub Actions** auto-deploys from `main` branch to Azure (uses `clean: true` to force full deployment)
 - `startup.sh` runs on Azure startup: installs deps → collectstatic → migrate → starts Gunicorn
-- **DO NOT push directly to `main`** - create feature branches and test locally first
-- All changes to `main` trigger immediate production deployment
+- **CRITICAL: NEVER push directly to `main`** - ALL changes must go through feature branches and PRs
+- **Agent workflow**: Create feature branch → make changes → push branch → create PR → STOP (user merges)
+- All merges to `main` trigger immediate production deployment (~2-3 minutes)
 
 ### Production Settings (`settings_production.py`)
 - `DEBUG=False`
-- Uses environment variables: `DJANGO_SECRET_KEY`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `AZURE_ACCOUNT_NAME`
+- Uses environment variables: `DJANGO_SECRET_KEY`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`, `AZURE_ACCOUNT_NAME`, `AZURE_ACCOUNT_KEY`
 - Session security: 1-hour timeout, expires on browser close, secure HTTPS-only cookies
-- Static files served from Azure Blob Storage
+- **Storage**: Static files and media served from Azure Blob Storage (`chorepointsstorage`)
+  - Uses custom storage backends in `storage_backends.py` (AzureStaticStorage, AzureMediaStorage)
+  - `DEFAULT_FILE_STORAGE = 'chorepoints.storage_backends.AzureMediaStorage'`
+  - Requires `django-storages[azure]` and `azure-storage-blob` packages
 
 ### Azure Management Commands
 **IMPORTANT**: Never attempt to run SSH commands automatically. Always ask the user to run Azure SSH commands manually.
@@ -49,10 +53,29 @@ az webapp restart --name elija-agota --resource-group chorepoints-rg-us
 
 # View logs
 az webapp log tail --name elija-agota --resource-group chorepoints-rg-us
-
-# Deploy files
-az webapp deploy --resource-group chorepoints-rg-us --name elija-agota --src-path <file> --target-path <path> --type static
 ```
+
+### Updating Chores/Rewards Data (CSV Files)
+**CRITICAL**: After editing `initial_data/chores.csv` or `rewards.csv`:
+
+1. **Commit and push to feature branch**:
+   ```bash
+   git checkout -b feature/update-chores
+   git add chorepoints/initial_data/*.csv
+   git commit -m "Update chores/rewards list"
+   git push origin feature/update-chores
+   ```
+
+2. **Create PR and wait for user to merge** - GitHub Actions will auto-deploy
+
+3. **After deployment, user must SSH and reload data**:
+   ```bash
+   az webapp ssh --name elija-agota --resource-group chorepoints-rg-us
+   cd /home/site/wwwroot
+   python manage.py load_initial_data  # Reloads CSV data into database
+   ```
+
+**Note**: CSV files deploy via GitHub Actions with `clean: true` flag (ensures all files are updated)
 
 ### Localhost vs Production
 - **Localhost** (`./chorepoints/dev.ps1`): SQLite, DEBUG=True, no Azure storage, for development only
@@ -92,10 +115,33 @@ Fallback: emoji → monogram (first letter) for avatars; default emoji for chore
 
 ## Development Workflow
 
-### Branch Strategy
-- **`main` branch**: Auto-deploys to production Azure - DO NOT push untested code
-- **Feature branches**: Create for all development work (`git checkout -b feature/my-feature`)
-- **Testing**: Always test locally with `dev.ps1` before merging to main
+### Branch Strategy & PR Workflow
+**CRITICAL**: AI agents must NEVER push directly to `main` branch
+
+**Agent workflow for ALL changes**:
+1. **Create feature branch**: `git checkout -b feature/descriptive-name`
+2. **Make changes**: Edit files, test locally
+3. **Commit to feature branch**: `git add . && git commit -m "Description"`
+4. **Push feature branch**: `git push origin feature/descriptive-name`
+5. **Create PR via GitHub CLI or instruct user**: `gh pr create --title "..." --body "..."`
+6. **STOP HERE** - User reviews and merges PR
+7. **Auto-deployment**: GitHub Actions deploys to Azure after merge to `main`
+
+**Never perform these actions**:
+- ❌ `git push origin main` (direct push to main)
+- ❌ `git merge feature-branch` on main branch
+- ❌ Auto-merging PRs
+
+**User responsibilities**:
+- Review and approve PRs
+- Merge PRs to `main`
+- Monitor GitHub Actions deployment
+- Run post-deployment commands in Azure SSH (migrations, data reloads)
+
+### Testing Strategy
+- **Local testing required**: Always test with `dev.ps1` before creating PR
+- **Production testing**: After PR merge, verify on https://elija-agota.azurewebsites.net/
+- **Rollback**: If issues, revert PR merge in GitHub
 
 ### Quick Start (Windows PowerShell - Local Development Only)
 ```powershell
@@ -164,8 +210,9 @@ Edit `core/management/commands/seed_demo_lt.py` to add tuples like `("Title", po
 - Migrations committed (0001-0012); db.sqlite3 never committed (local only)
 - **Never commit secrets**: passwords, API keys, database credentials
 - Repo root: `django_kid_rewards/` (not `chorepoints/` subfolder)
-- Always create feature branches for development: `git checkout -b feature/description`
-- Test changes locally before pushing to `main` (auto-deploys to production)
+- **ALWAYS use feature branches**: `git checkout -b feature/description`
+- **NEVER push to main directly**: Create PR and let user merge
+- Test changes locally with `dev.ps1` before creating PR
 
 ## Security Features
 - **Session Security**: 1-hour timeout, expires on browser close, HttpOnly cookies, SameSite=Lax
