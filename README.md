@@ -43,7 +43,7 @@
 ### Production Users
 - **Parent Account:** `tevai` (password stored securely in Azure, NOT in repo)
 - **Kids:**
-  - **Elija:** Male, PIN 1234, Island theme (🏝️)
+  - **Elija:** Female, PIN 1234, Island theme (🏝️)
   - **Agota:** Female, PIN 1234, Space theme (🚀)
 
 
