@@ -1,0 +1,4 @@
+GitHub Actions Test #2
+Timestamp: 2025-11-09 21:15
+Testing with Azure service principal credentials.
+This should work now!
