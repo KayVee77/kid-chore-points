@@ -1,26 +1,17 @@
 from django.core.management.base import BaseCommand, CommandError
 from django.contrib.auth import get_user_model
 from core.models import Kid, Chore, Reward
+import csv
+from pathlib import Path
 
 KIDS = [
     ("Elija", "ISLAND", "F"),  # Girl
     ("Agota", "SPACE", "F"),   # Girl
 ]
 PIN = "1234"
-CHORES = [
-    ("Išnešti šiukšles", 2, "🗑️"),
-    ("Susitvarkyti kambarį", 3, "🧸"),
-    ("Išplauti indus", 2, "🍽️"),
-    ("Pamaitinti augintinį", 1, "🐾"),
-]
-REWARDS = [
-    ("30 min ekranui", 5, "🕹️"),
-    ("Saldi užkandėlė", 4, "🍬"),
-    ("Vakaras be namų ruošos", 8, "🌙"),
-]
 
 class Command(BaseCommand):
-    help = "Seed Lithuanian demo data: kids, chores, rewards"
+    help = "Seed Lithuanian demo data: kids, chores from CSV, rewards from CSV"
 
     def add_arguments(self, parser):
         parser.add_argument('--username', help='Existing parent username (superuser).', required=True)
@@ -32,6 +23,11 @@ class Command(BaseCommand):
             parent = User.objects.get(username=username)
         except User.DoesNotExist:
             raise CommandError("Parent user not found. Create superuser first.")
+
+        # Get paths to CSV files
+        data_folder = Path(__file__).parent.parent.parent.parent / 'initial_data'
+        chores_file = data_folder / 'chores.csv'
+        rewards_file = data_folder / 'rewards.csv'
 
         # Kids
         for name, theme, gender in KIDS:
@@ -48,32 +44,58 @@ class Command(BaseCommand):
                 kid.save(update_fields=['pin', 'active', 'map_theme', 'gender'])
             self.stdout.write(self.style.SUCCESS(f"Kid ready: {kid.name} (PIN {PIN}, Theme: {theme}, Gender: {gender})"))
 
-        # Chores
-        for title, points, emoji in CHORES:
-            chore, created = Chore.objects.get_or_create(parent=parent, title=title, defaults={'points': points, 'icon_emoji': emoji})
-            changed = False
-            if chore.points != points:
-                chore.points = points
-                changed = True
-            if not chore.icon_emoji:
-                chore.icon_emoji = emoji
-                changed = True
-            if changed:
-                chore.save()
-            self.stdout.write(self.style.SUCCESS(f"Chore: {title} (+{points}) {emoji}"))
+        # Chores from CSV
+        if chores_file.exists():
+            with open(chores_file, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    chore, created = Chore.objects.get_or_create(
+                        parent=parent, 
+                        title=row['title'], 
+                        defaults={
+                            'points': int(row['points']), 
+                            'icon_emoji': row.get('icon_emoji', '✓'),
+                            'active': True
+                        }
+                    )
+                    changed = False
+                    if chore.points != int(row['points']):
+                        chore.points = int(row['points'])
+                        changed = True
+                    if not chore.icon_emoji or chore.icon_emoji != row.get('icon_emoji', '✓'):
+                        chore.icon_emoji = row.get('icon_emoji', '✓')
+                        changed = True
+                    if changed:
+                        chore.save()
+                    self.stdout.write(self.style.SUCCESS(f"Chore: {row['title']} (+{row['points']}) {row.get('icon_emoji', '✓')}"))
+        else:
+            self.stdout.write(self.style.WARNING(f'Chores CSV not found: {chores_file}'))
 
-        # Rewards
-        for title, cost, emoji in REWARDS:
-            reward, created = Reward.objects.get_or_create(parent=parent, title=title, defaults={'cost_points': cost, 'icon_emoji': emoji})
-            changed = False
-            if reward.cost_points != cost:
-                reward.cost_points = cost
-                changed = True
-            if not reward.icon_emoji:
-                reward.icon_emoji = emoji
-                changed = True
-            if changed:
-                reward.save()
-            self.stdout.write(self.style.SUCCESS(f"Reward: {title} ({cost}) {emoji}"))
+        # Rewards from CSV
+        if rewards_file.exists():
+            with open(rewards_file, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    reward, created = Reward.objects.get_or_create(
+                        parent=parent, 
+                        title=row['title'], 
+                        defaults={
+                            'cost_points': int(row['cost_points']), 
+                            'icon_emoji': row.get('icon_emoji', '🎁'),
+                            'active': True
+                        }
+                    )
+                    changed = False
+                    if reward.cost_points != int(row['cost_points']):
+                        reward.cost_points = int(row['cost_points'])
+                        changed = True
+                    if not reward.icon_emoji or reward.icon_emoji != row.get('icon_emoji', '🎁'):
+                        reward.icon_emoji = row.get('icon_emoji', '🎁')
+                        changed = True
+                    if changed:
+                        reward.save()
+                    self.stdout.write(self.style.SUCCESS(f"Reward: {row['title']} ({row['cost_points']}) {row.get('icon_emoji', '🎁')}"))
+        else:
+            self.stdout.write(self.style.WARNING(f'Rewards CSV not found: {rewards_file}'))
 
         self.stdout.write(self.style.NOTICE("Done. Kids can log in at /kid/login/ (PIN 1234)."))

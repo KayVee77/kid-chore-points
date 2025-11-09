@@ -820,7 +820,7 @@ pytest core/tests
 
 ### Test Data Commands
 ```bash
-# Quick demo seeding (4 chores, 3 rewards, 2 kids)
+# Quick demo seeding (18 chores from CSV, 15 rewards from CSV, 2 kids)
 python manage.py seed_demo_lt --username <parent>
 
 # Full CSV data (18 chores, 15 rewards)
