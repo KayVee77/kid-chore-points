@@ -1,0 +1,4 @@
+GitHub Actions Deployment Test
+Timestamp: 2025-11-09 21:10
+This file tests if GitHub Actions is now deploying successfully to Azure.
+If you see this file on Azure after pushing to main, the workflow is working!
