@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from core.models import Kid, Chore, Reward
 
 KIDS = [
-    ("Elija", "ISLAND", "M"),  # Boy
+    ("Elija", "ISLAND", "F"),  # Girl
     ("Agota", "SPACE", "F"),   # Girl
 ]
 PIN = "1234"
