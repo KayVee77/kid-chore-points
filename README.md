@@ -39,9 +39,13 @@ The script automatically:
 
 **Additional Options:**
 ```powershell
-./dev.ps1 -Reset      # Recreate venv from scratch
-./dev.ps1 -Port 8010  # Start on different port
+./dev.ps1 -Reset -ForceReset  # Rebuild venv from scratch (prompts before touching .venv; SQLite preserved)
+./dev.ps1 -Port 8010          # Start on different port
 ```
+
+> ℹ️ `-Reset` is intentionally guarded. Without `-ForceReset` the script skips the rebuild to avoid wiping your virtual
+> environment or disturbing `db.sqlite3`. Even with `-ForceReset`, PowerShell will ask for confirmation before `.venv`
+> removal so accidental resets can still be cancelled.
 
 ### Quick Daily Start
 
