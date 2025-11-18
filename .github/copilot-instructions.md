@@ -28,7 +28,7 @@ Agents working on this project must demonstrate **genius-level expertise** in:
 - **Frontend**: Progressive enhancement, ARIA accessibility, responsive CSS, minimal JavaScript, server-side rendering
 - **Security**: OWASP Top 10, Django security hardening, session management, CSRF/XSS prevention, secure cookies
 - **Performance**: Query optimization, N+1 problem prevention, caching strategies, CDN, lazy loading, image optimization
-- **Testing**: Unit tests, integration tests, E2E with Playwright, test coverage, fixture management
+- **Testing**: Unit tests with Django TestCase/pytest, integration tests, manual E2E testing, test coverage
 
 ## 📋 Project Overview
 
@@ -509,20 +509,21 @@ python manage.py collectstatic --noinput
 
 ### Testing Strategy
 
-**Current state**: No automated tests yet (MVP phase)
+**Current state**: Test files exist but need implementation (MVP phase)
 
-**Planned testing approach**:
+**Testing approach**:
 1. **Unit tests** (`core/tests/test_*.py`):
    - Model methods: `approve()`, `reject()`, milestone calculations
    - Form validation: PIN length, duplicate prevention
    - View helpers: `_get_kid()`, session handling
+   - Files: test_models.py, test_views.py, test_forms.py, test_integration.py, test_security.py, test_performance.py, test_error_handling.py
 
 2. **Integration tests**:
    - Approval workflow: create PENDING → approve → verify balance
    - Milestone bonuses: cross threshold → verify bonus awarded
    - Duplicate prevention: submit same chore twice → verify one PENDING
 
-3. **E2E tests** (Playwright, `e2e/tests/`):
+3. **Manual E2E testing** (no automation yet):
    - Kid login flow: select kid → enter PIN → land on home
    - Chore submission: click chore → verify PENDING badge
    - Parent approval: admin login → approve chore → verify kid sees confetti
@@ -530,15 +531,18 @@ python manage.py collectstatic --noinput
 
 **Running tests**:
 ```bash
-# Unit tests (once implemented)
+# Unit tests (Django's test runner)
+python manage.py test core
+
+# OR with pytest
 pip install pytest pytest-django
 pytest core/tests
 
-# E2E tests (once implemented)
-cd e2e
-npm install
-npx playwright install --with-deps
-npx playwright test
+# Run specific test file
+python manage.py test core.tests.test_models
+
+# Manual testing: run dev server
+./dev.ps1  # Opens http://localhost:8000
 ```
 
 ### Data Migrations & CSV Management

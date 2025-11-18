@@ -51,6 +51,7 @@ Agents on this project MUST demonstrate mastery of:
 - **Architecture**: Monolithic Django (single `core/` app, server-side rendering, minimal JavaScript)
 - **Production**: Azure App Service (`elija-agota`), PostgreSQL (`chorepoints-db`), Blob Storage (`chorepointsstorage`)
 - **CI/CD**: GitHub Actions auto-deploys `main` branch to Azure (see `.github/workflows/deploy.yml`)
+- **Deployment**: Direct to Azure App Service (no Docker, no containers)
 - **Users**: Parent admin (`tevai`), Kids with PIN login (Elija, Agota)
 - **Localization**: Lithuanian-first UI for kids, English admin interface
 
@@ -115,110 +116,58 @@ python manage.py dbshell
 python manage.py collectstatic --noinput
 ```
 
-## 🐳 Build / Docker (Containerization)
+## 📦 Local Development (No Docker)
 
-### Docker Setup (Local Testing)
+**IMPORTANT**: This project does NOT use Docker or containerization. It runs directly on the host machine.
+
+### Why No Docker?
+- Pure Python Django app deployed directly to Azure App Service
+- Local development uses SQLite (simple, no container needed)
+- Production uses Azure PostgreSQL Flexible Server (managed service)
+- Azure App Service handles deployment without Docker images
+- Simpler development workflow: `./dev.ps1` and you're running
+
+## 🧪 Testing Strategy
+
+### Unit Tests (Django TestCase)
+**Current Status**: Test files exist in `core/tests/` but need implementation.
+
 ```bash
-cd chorepoints
-docker build -t kid-chore:local .
-```
-
-**Dockerfile** (`chorepoints/Dockerfile`):
-- Base image: `python:3.11-slim`
-- Installs system dependencies: `libpq-dev` (PostgreSQL), `libjpeg-dev` (Pillow)
-- Creates non-root `appuser` with UID 1000
-- Exposes port 8000
-- Startup: bash startup.sh (migrate, collectstatic, gunicorn)
-
-### Docker Compose (Local Multi-Container)
-```bash
-# Defined in docker-compose.yml at repo root
-docker-compose up -d
-```
-
-**Services**:
-- `web`: Django app (port 8000, connects to postgres service)
-- `postgres`: PostgreSQL 15 (port 5432, volume: postgres_data)
-
-**Environment variables** (docker-compose.yml):
-- `DB_NAME=chorepoints`
-- `DB_USER=chorepoints_admin`
-- `DB_PASSWORD=local_dev_password`
-- `DB_HOST=postgres` (service name)
-
-**Accessing containers**:
-```bash
-docker-compose exec web python manage.py shell
-docker-compose exec postgres psql -U chorepoints_admin -d chorepoints
-docker-compose logs -f web
-```
-
-## 🧪 Tests & Playwright E2E
-
-### Unit Tests (Placeholder — Need Implementation)
-```bash
-# Install pytest + django plugin
+# Install pytest + django plugin (optional - can use Django's built-in unittest)
 pip install pytest pytest-django
 
 # Run all core tests
 pytest core/tests
+# OR use Django's test runner:
+python manage.py test core
 
 # Run specific test file
 pytest core/tests/test_models.py
+# OR:
+python manage.py test core.tests.test_models
 
 # Run with coverage
 pytest --cov=core core/tests
 ```
 
-**Test structure** (`core/tests/`):
+**Existing test files** (`core/tests/`):
 - `test_models.py`: Model methods (`approve()`, `reject()`, milestone calculations)
 - `test_views.py`: View logic (kid auth, chore submission, duplicate prevention)
 - `test_forms.py`: Form validation (PIN length, confirm PIN matching)
 - `test_integration.py`: End-to-end workflows (PENDING → APPROVED → balance update)
 - `test_security.py`: CSRF, session security, access control
 - `test_performance.py`: N+1 query detection, large dataset handling
+- `test_error_handling.py`: Error handling and edge cases
 
-### Playwright E2E Tests (Recommended for CI)
-**Setup**:
-```bash
-cd e2e
-npm install
-npx playwright install --with-deps
-```
+### Manual Testing Workflow
+**Primary testing approach**: Manual testing via local dev server
+1. Run `./dev.ps1` to start development server
+2. Test kid login flow at http://localhost:8000/kid/login/
+3. Test chore submission and approval workflow
+4. Verify confetti animations and milestone unlocks
+5. Test admin approval actions in Django admin
 
-**Test scenarios** (`e2e/tests/`):
-- Kid login flow: Select kid → Enter PIN → Verify home page
-- Chore submission: Click chore → Verify PENDING badge → Check admin approval
-- Parent approval: Admin login → Bulk approve → Verify kid sees confetti
-- Milestone unlock: Approve chores → Cross 50pts → Verify Bronze badge animation
-- Reward redemption: Click reward → Verify PENDING → Admin approve → Balance deducted
-- Duplicate prevention: Submit same chore twice → Verify "already pending" message
-
-**Running Playwright**:
-```bash
-# Run all tests (headless)
-npx playwright test
-
-# Run with UI
-npx playwright test --ui
-
-# Run specific test
-npx playwright test e2e/tests/kid-login.spec.ts
-
-# Generate test report
-npx playwright show-report
-```
-
-**CI Integration** (GitHub Actions future enhancement):
-```yaml
-# Add to .github/workflows/deploy.yml before deployment
-- name: Run E2E tests
-  run: |
-    cd e2e
-    npm install
-    npx playwright install --with-deps
-    npx playwright test
-```
+**No E2E automation yet**: Project uses manual testing instead of Playwright/Selenium
 
 ## 💻 Code Style & Linting
 
@@ -432,12 +381,17 @@ az webapp config appsettings set \
 1. Checkout source code
 2. Setup Python 3.11
 3. Install dependencies (`pip install -r requirements.txt`)
-4. Run unit tests (`pytest core/tests`, continue-on-error: true)
+4. Run unit tests (currently skipped - `continue-on-error: true`)
 5. Archive application (zip `chorepoints/` folder, exclude __pycache__)
 6. Azure login (uses `AZURE_CREDENTIALS` secret — service principal JSON)
 7. Deploy to Azure Web App (`azure/webapps-deploy@v3`, slot: Production)
-8. Startup command: `bash startup.sh` (runs on Azure container startup)
+8. Startup command: `bash startup.sh` (runs on Azure App Service)
 9. Azure logout
+
+**Deployment Type**: Direct to Azure App Service (no Docker containers)
+- Azure unpacks zip to `/home/site/wwwroot`
+- Runs `startup.sh`: installs deps → collectstatic → migrate → gunicorn
+- Total deployment time: ~2-3 minutes
 
 **What agents should do**:
 1. Create feature branch and make changes
@@ -994,7 +948,7 @@ class TestSmokeTest:
 ## 🔄 Conflict Resolution (Agents)
 
 ### When Tests Fail on CI
-**Scenario**: Pytest fails after PR merge
+**Scenario**: Tests fail after PR merge
 
 **Agent action**:
 1. Pull `main` and rebase feature branch:
@@ -1003,16 +957,16 @@ class TestSmokeTest:
    git fetch origin
    git rebase origin/main
    ```
-2. Run tests locally: `pytest core/tests`
+2. Run tests locally: `python manage.py test core` or `pytest core/tests`
 3. If failure reproduces:
    - Debug test failure (check assertion, data setup, fixtures)
    - Fix code or test (not both if avoidable)
    - Commit fix: `[tests] Fix flaky test_approve_pending_log`
    - Push feature branch (do not merge yet)
 4. If failure is intermittent/flaky:
-   - Add retries to Playwright tests: `test.describe.configure({ retries: 2 })`
-   - Increase timeout: `await page.waitForSelector('.confetti', { timeout: 10000 })`
-   - Add explicit waits: `await page.waitForLoadState('networkidle')`
+   - Add test isolation (ensure test DB is clean between tests)
+   - Use `TransactionTestCase` for tests that need committed data
+   - Check for race conditions in approval workflow tests
 
 ### When Merge Conflict Occurs
 **Scenario**: Another PR merged to `main`, conflicts with your feature branch
