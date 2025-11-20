@@ -2,7 +2,7 @@ name: Deploy ChorePoints
 
 on:
    push:
-      branches: ["main"]
+      branches: ["**"]  # Trigger on ALL branches for testing
    pull_request:
       branches: ["main"]
    workflow_dispatch:
