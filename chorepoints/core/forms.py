@@ -33,3 +33,48 @@ class ChangePinForm(forms.Form):
             raise forms.ValidationError("Naujas PIN ir patvirtinimas nesutampa!")
         
         return cleaned_data
+
+class AvatarUploadForm(forms.ModelForm):
+    """Form for uploading kid avatar photo or selecting emoji."""
+    class Meta:
+        model = Kid
+        fields = ['photo', 'avatar_emoji']
+        widgets = {
+            'avatar_emoji': forms.TextInput(attrs={
+                'placeholder': '😀',
+                'maxlength': '4',
+                'class': 'emoji-input'
+            })
+        }
+        labels = {
+            'photo': 'Įkelti nuotrauką',
+            'avatar_emoji': 'Arba pasirink emoji'
+        }
+        help_texts = {
+            'photo': 'Maksimalus dydis: 5MB. Palaikomi formatai: JPG, PNG, GIF',
+            'avatar_emoji': 'Įvesk emoji simbolį (pvz., 😀 🎮 🚀)'
+        }
+    
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if photo:
+            # Validate file size (max 5MB)
+            if photo.size > 5 * 1024 * 1024:
+                raise forms.ValidationError("Nuotrauka per didelė! Maksimalus dydis: 5MB")
+            
+            # Validate file type
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif']
+            if hasattr(photo, 'content_type') and photo.content_type not in allowed_types:
+                raise forms.ValidationError("Netinkamas failas! Leistini formatai: JPG, PNG, GIF")
+        
+        return photo
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        photo = cleaned_data.get('photo')
+        avatar_emoji = cleaned_data.get('avatar_emoji')
+        
+        # At least one must be provided (or both can be cleared to reset)
+        # This allows flexibility - kids can switch between photo and emoji
+        
+        return cleaned_data
