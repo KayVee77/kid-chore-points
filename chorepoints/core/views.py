@@ -115,22 +115,7 @@ def kid_home(request):
     map_data = kid.get_map_progress()
     
     # Calculate old progress percentage for movement animation
-    old_progress_percentage = 0
-    if milestone_unlocked and map_data['milestones']:
-        # Calculate where the kid was before
-        next_milestone_pos = None
-        prev_milestone_pos = 0
-        for milestone in map_data['milestones']:
-            if milestone['position'] > old_map_position:
-                next_milestone_pos = milestone['position']
-                break
-            prev_milestone_pos = milestone['position']
-        
-        if next_milestone_pos:
-            segment_length = next_milestone_pos - prev_milestone_pos
-            progress_in_segment = old_map_position - prev_milestone_pos
-            if segment_length > 0:
-                old_progress_percentage = min(100, int((progress_in_segment / segment_length) * 100))
+    old_progress_percentage = kid.get_avatar_progress_percentage(old_map_position)
     
     # Convert Django messages to JSON for toast notifications
     django_messages = []

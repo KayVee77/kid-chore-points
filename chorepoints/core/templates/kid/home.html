@@ -1701,7 +1701,7 @@
       {% endif %}
     </div>
     <div style="flex: 1;">
-      <h2 style="margin:0 0 .5rem 0; font-size: 2rem; color: var(--color-gray-800);">Sveikas, {{ kid.name }}!</h2>
+      <h2 style="margin:0 0 .5rem 0; font-size: 2rem; color: var(--color-gray-800);">{{ kid.get_greeting }}</h2>
       <div id="points-badge" class="points-badge" data-current-points="{{ kid.points_balance }}" data-old-points="{{ old_points_balance }}">⭐ <span id="points-value">{{ kid.points_balance }}</span> taškai</div>
       {% if next_reward %}
         <div style="margin-top:.75rem; max-width:380px;">
@@ -1737,7 +1737,7 @@
       
       {# Reward milestones #}
       {% for milestone in map_data.milestones %}
-      <div class="milestone {% if milestone.position <= map_data.current_position %}completed{% elif milestone.position == map_data.next_reward_position %}current{% else %}future{% endif %} {% if milestone.reward_id in newly_affordable_reward_ids %}treasure-newly-affordable{% endif %}"
+      <div class="milestone {% if milestone.position <= map_data.current_position %}completed{% elif map_data.next_milestone and milestone.position == map_data.next_milestone.position %}current{% else %}future{% endif %} {% if milestone.reward_id in newly_affordable_reward_ids %}treasure-newly-affordable{% endif %}"
            data-reward-id="{{ milestone.reward_id }}"
            data-reward-title="{{ milestone.reward_title }}"
            data-reward-icon="{{ milestone.reward_icon }}"
@@ -1776,7 +1776,7 @@
            id="kidPositionIndicator"
            style="left: {{ map_data.progress_percentage }}%; --old-pos: {{ old_progress_percentage }}%; --new-pos: {{ map_data.progress_percentage }}%;">
         {{ kid.avatar_emoji }}
-        {% if map_data.next_reward and map_data.points_needed > 0 %}
+        {% if map_data.next_milestone and not map_data.completed_all_milestones and map_data.points_needed > 0 %}
         <div class="progress-bubble">
           {% if map_data.points_needed <= 3 %}
             🔥 Beveik ten! Dar {{ map_data.points_needed }} tšk!
@@ -1793,7 +1793,7 @@
            id="kidPositionIndicator"
            style="left: {{ map_data.progress_percentage }}%; --old-pos: {{ old_progress_percentage }}%; --new-pos: {{ map_data.progress_percentage }}%;">
         🧒
-        {% if map_data.next_reward and map_data.points_needed > 0 %}
+        {% if map_data.next_milestone and not map_data.completed_all_milestones and map_data.points_needed > 0 %}
         <div class="progress-bubble">
           {% if map_data.points_needed <= 3 %}
             🔥 Beveik ten! Dar {{ map_data.points_needed }} tšk!
@@ -1808,13 +1808,14 @@
       {% endif %}
     </div>
     
+    
     <div class="map-progress-text">
-      {% if map_data.next_reward %}
-        <strong>Tu esi čia: {{ map_data.current_position }} tšk</strong> • 
+      {% if not map_data.completed_all_milestones and map_data.next_milestone %}
+        <strong>Tu esi čia: {{ map_data.current_position }} tšk</strong> – 
         Dar {{ map_data.points_needed }} tšk iki 
-        <strong>{{ map_data.next_reward.reward_title }}</strong>!
+        <strong>{{ map_data.next_milestone.name }}</strong>!
       {% else %}
-        <strong>🎉 Sveikiname! Pasiekei visus apdovanojimus!</strong>
+        <strong>Sveikiname! Pasiekei visus apdovanojimus!</strong>
       {% endif %}
     </div>
   </div>

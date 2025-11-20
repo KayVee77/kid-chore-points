@@ -72,8 +72,10 @@ class Kid(models.Model):
         """Return gender-appropriate Lithuanian greeting."""
         if self.gender == self.Gender.FEMALE:
             return f"Sveika, {self.name}!"
-        else:
+        if self.gender == self.Gender.MALE:
             return f"Sveikas, {self.name}!"
+        # Neutral fallback when gender is unknown/other
+        return f"Labas, {self.name}!"
 
     def get_current_milestone(self) -> dict:
         """Get the highest milestone achieved by this kid."""
@@ -102,23 +104,37 @@ class Kid(models.Model):
             }
         return None
 
+    def get_avatar_progress_percentage(self, position: int | None = None) -> int:
+        """Return map percentage based on the last achieved milestone (step-based)."""
+        current_position = self.map_position if position is None else position
+        total_milestones = len(ACHIEVEMENT_MILESTONES)
+        if total_milestones == 0 or current_position <= 0:
+            return 0
+
+        achieved_count = 0
+        for milestone in ACHIEVEMENT_MILESTONES:
+            if current_position >= milestone['position']:
+                achieved_count += 1
+            else:
+                break
+
+        achieved_count = min(achieved_count, total_milestones)
+        if achieved_count == 0:
+            return 0
+        return int((achieved_count / total_milestones) * 100)
+
     def get_map_progress(self) -> dict:
         """Calculate adventure map progress based on achievement milestones."""
         current_milestone = self.get_current_milestone()
         next_milestone = self.get_next_milestone()
+        final_milestone_position = ACHIEVEMENT_MILESTONES[-1]['position'] if ACHIEVEMENT_MILESTONES else 0
+        completed_all_milestones = bool(final_milestone_position and self.map_position >= final_milestone_position)
         
         # Calculate progress to next milestone
-        progress_percentage = 0
+        progress_percentage = self.get_avatar_progress_percentage()
         points_needed = 0
         
         if next_milestone:
-            prev_position = current_milestone['position'] if current_milestone else 0
-            segment_length = next_milestone['position'] - prev_position
-            progress_in_segment = self.map_position - prev_position
-            
-            if segment_length > 0:
-                progress_percentage = min(100, int((progress_in_segment / segment_length) * 100))
-            
             points_needed = next_milestone['position'] - self.map_position
         
         # Build milestone display list
@@ -144,6 +160,7 @@ class Kid(models.Model):
             'progress_percentage': progress_percentage,
             'points_needed': points_needed,
             'total_points_earned': self.map_position,
+            'completed_all_milestones': completed_all_milestones,
         }
 
     def __str__(self):
