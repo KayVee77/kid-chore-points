@@ -5,7 +5,7 @@ import csv
 from pathlib import Path
 
 KIDS = [
-    ("Elija", "ISLAND", "F"),  # Girl
+    ("Elija", "ISLAND", "M"),  # Boy
     ("Agota", "SPACE", "F"),   # Girl
 ]
 PIN = "1234"
