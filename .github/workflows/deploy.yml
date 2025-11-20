@@ -56,16 +56,11 @@ jobs:
            with:
               creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-         - name: Deploy via Azure CLI
-           run: |
-              echo "Deploying to Azure App Service..."
-              az webapp deployment source config-zip \
-                --resource-group chorepoints-rg-us \
-                --name elija-agota \
-                --src ./chorepoints.zip \
-                --verbose
-              
-              echo "✓ Deployment completed successfully"
+         - name: Deploy to Azure Web App
+           uses: azure/webapps-deploy@v3
+           with:
+              app-name: 'elija-agota'
+              package: './chorepoints.zip'
 
          - name: Restart Azure Web App
            run: |
