@@ -373,7 +373,7 @@ az webapp config appsettings set \
 **Workflow**: `.github/workflows/deploy.yml`
 
 **Triggers**:
-- Push to `main` branch (auto-deploys to production)
+- Push to **ANY branch** (allows testing deployments on feature branches)
 - Pull request to `main` (runs tests only, no deployment)
 - Manual workflow_dispatch (via GitHub UI)
 
@@ -384,14 +384,20 @@ az webapp config appsettings set \
 4. Run unit tests (currently skipped - `continue-on-error: true`)
 5. Archive application (zip `chorepoints/` folder, exclude __pycache__)
 6. Azure login (uses `AZURE_CREDENTIALS` secret — service principal JSON)
-7. Deploy to Azure Web App (`azure/webapps-deploy@v3`, slot: Production)
-8. Startup command: `bash startup.sh` (runs on Azure App Service)
-9. Azure logout
+7. **Deploy to Azure Web App** using `azure/webapps-deploy@v3` action
+   - Handles authentication automatically
+   - More reliable than manual Kudu API calls
+   - Package: `./chorepoints.zip`
+8. Restart Azure Web App (graceful restart, ~30s)
+9. Verify deployment (check health endpoint)
+10. Azure logout
 
 **Deployment Type**: Direct to Azure App Service (no Docker containers)
 - Azure unpacks zip to `/home/site/wwwroot`
 - Runs `startup.sh`: installs deps → collectstatic → migrate → gunicorn
 - Total deployment time: ~2-3 minutes
+
+**Important**: Workflow now triggers on ALL branches (`branches: ["**"]`) to enable deployment testing before merging to main
 
 **What agents should do**:
 1. Create feature branch and make changes
@@ -403,8 +409,9 @@ az webapp config appsettings set \
 **What agents should NOT do**:
 - ❌ Merge PR automatically (user must review and approve)
 - ❌ Push directly to `main` branch
-- ❌ Modify `.github/workflows/deploy.yml` without user approval
+- ❌ Modify `.github/workflows/deploy.yml` without user approval (deployment is WORKING, don't break it)
 - ❌ Run `az webapp ssh` commands automatically (always ask user to run manually)
+- ❌ Use manual Kudu API curl commands (use official `azure/webapps-deploy@v3` action instead)
 
 ### Azure startup.sh (Runs on Container Startup)
 **Script**: `chorepoints/startup.sh`
@@ -707,7 +714,7 @@ class Migration(migrations.Migration):
 
 ### Production Configuration (Minimal Changes)
 **Agents should avoid modifying**:
-- `.github/workflows/deploy.yml` (CI/CD pipeline)
+- `.github/workflows/deploy.yml` (CI/CD pipeline - **WORKING AS OF 2025-11-20, DO NOT BREAK**)
 - `startup.sh` (Azure startup script)
 - `settings_production.py` (production Django settings)
 - Azure App Service configuration (requires user approval)
@@ -715,8 +722,14 @@ class Migration(migrations.Migration):
 **If changes needed**:
 1. Document in PR why change is necessary
 2. Test locally with equivalent configuration
-3. Include rollback plan in PR description
-4. Let user review and approve before merging
+3. Test on feature branch FIRST (workflow runs on all branches)
+4. Include rollback plan in PR description
+5. Let user review and approve before merging
+
+**Recent Deployment Fixes (2025-11-20)**:
+- ✅ Fixed 401 Unauthorized errors by switching from manual Kudu API curl to `azure/webapps-deploy@v3`
+- ✅ Enabled workflow on all branches for testing (`branches: ["**"]`)
+- ✅ Deployment now works reliably - DO NOT revert these changes
 
 ## 📚 References
 
@@ -748,8 +761,8 @@ class Migration(migrations.Migration):
 
 ---
 
-**Last Updated**: 2025-11-19  
-**Version**: 2.0 (Comprehensive Agent Guide)  
+**Last Updated**: 2025-11-20  
+**Version**: 2.1 (Updated Deployment Workflow)  
 **Maintainers**: AI Coding Agents (GitHub Copilot, ChatGPT, VS Code Agents)
 
 ## Quick Setup commands (local dev; PowerShell on Windows)
