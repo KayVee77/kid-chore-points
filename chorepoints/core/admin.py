@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.utils.html import mark_safe
 from .models import Kid, Chore, Reward, ChoreLog, Redemption, PointAdjustment
+from .admin_forms import ChoreAdminForm, RewardAdminForm
 
 # Customize default admin site
 admin.site.site_title = "Taškų sistema"
@@ -32,6 +33,7 @@ class KidAdmin(admin.ModelAdmin):
 
 @admin.register(Chore)
 class ChoreAdmin(admin.ModelAdmin):
+    form = ChoreAdminForm
     list_display = ("icon_preview", "title", "points", "parent", "active")
     list_filter = ("active", "parent")
     search_fields = ("title",)
@@ -47,6 +49,7 @@ class ChoreAdmin(admin.ModelAdmin):
 
 @admin.register(Reward)
 class RewardAdmin(admin.ModelAdmin):
+    form = RewardAdminForm
     list_display = ("icon_preview", "title", "cost_points", "parent", "active")
     list_filter = ("active", "parent")
     search_fields = ("title",)
