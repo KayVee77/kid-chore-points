@@ -1735,36 +1735,35 @@
         <div class="milestone-label">Pradžia</div>
       </div>
       
-      {# Reward milestones #}
+      {# Achievement milestones #}
       {% for milestone in map_data.milestones %}
-      <div class="milestone {% if milestone.position <= map_data.current_position %}completed{% elif map_data.next_milestone and milestone.position == map_data.next_milestone.position %}current{% else %}future{% endif %} {% if milestone.reward_id in newly_affordable_reward_ids %}treasure-newly-affordable{% endif %}"
-           data-reward-id="{{ milestone.reward_id }}"
-           data-reward-title="{{ milestone.reward_title }}"
-           data-reward-icon="{{ milestone.reward_icon }}"
-           data-reward-points="{{ milestone.position }}"
+      <div class="milestone {% if milestone.index == map_data.current_milestone_index %}current{% elif milestone.position <= map_data.current_position %}completed{% else %}future{% endif %}"
+           data-milestone-position="{{ milestone.position }}"
+           data-milestone-name="{{ milestone.name }}"
+           data-milestone-icon="{{ milestone.icon }}"
            data-current-points="{{ kid.points_balance }}"
            data-map-position="{{ map_data.current_position }}"
            data-is-achieved="{% if milestone.position <= map_data.current_position %}true{% else %}false{% endif %}"
            role="button"
            tabindex="0"
            aria-label="{{ milestone.aria_label }}"
-           onkeypress="if(event.key==='Enter' || event.key===' '){showRewardDetails(this)}">
+           onkeypress="if(event.key==='Enter' || event.key===' '){showMilestoneDetails(this)}">
         <div class="milestone-tooltip">
-          {{ milestone.reward_title }}
+          {{ milestone.name }}
           <br>
           {% if milestone.position <= map_data.current_position %}
-            <small style="color: #4CAF50;">✅ Pasiekta!</small>
-          {% elif kid.points_balance >= milestone.position %}
-            <small style="color: #FF9800;">🎯 Gali prašyti!</small>
+            <small style="color: #4CAF50;">✅ Pasiekta! +{{ milestone.bonus }} bonus</small>
+          {% elif map_data.next_milestone and milestone.position == map_data.next_milestone.position %}
+            <small style="color: #FF9800;">🎯 Kitas tikslas! Dar {{ map_data.points_needed }} tšk</small>
           {% else %}
             <small style="color: #9e9e9e;">🔒 {{ milestone.position }} tšk reikia</small>
           {% endif %}
         </div>
-        <div class="milestone-marker" onclick="showRewardDetails(this.parentElement)">
-          {{ milestone.reward_icon }}
+        <div class="milestone-marker" onclick="showMilestoneDetails(this.parentElement)">
+          {{ milestone.icon }}
         </div>
         <div class="milestone-label">
-          {{ milestone.reward_title }}<br>
+          {{ milestone.name }}<br>
           <small>({{ milestone.position }} tšk)</small>
         </div>
       </div>
@@ -1821,13 +1820,13 @@
   </div>
   {% endif %}
 
-  {# Reward Detail Modal #}
+  {# Milestone Detail Modal #}
   <div id="rewardModal" class="modal" style="display: none;">
-    <div class="modal-overlay" onclick="closeRewardModal()"></div>
+    <div class="modal-overlay" onclick="closeMilestoneModal()"></div>
     <div class="modal-content">
-      <button class="modal-close" onclick="closeRewardModal()">✕</button>
+      <button class="modal-close" onclick="closeMilestoneModal()">✕</button>
       <div class="modal-icon" id="modalIcon">🎁</div>
-      <h3 id="modalTitle">Apdovanojimas</h3>
+      <h3 id="modalTitle">Ženkliukas</h3>
       <div class="modal-points" id="modalPoints">0 tšk</div>
       <div class="modal-description" id="modalDescription"></div>
       <div class="modal-status" id="modalStatus"></div>
@@ -2254,31 +2253,31 @@
 
   <script>
     // Interactive Adventure Map Functions
-    function showRewardDetails(milestoneElement) {
-      const rewardTitle = milestoneElement.dataset.rewardTitle;
-      const rewardIcon = milestoneElement.dataset.rewardIcon;
-      const rewardPoints = parseInt(milestoneElement.dataset.rewardPoints);
+    function showMilestoneDetails(milestoneElement) {
+      const milestoneName = milestoneElement.dataset.milestoneName;
+      const milestoneIcon = milestoneElement.dataset.milestoneIcon;
+      const milestonePoints = parseInt(milestoneElement.dataset.milestonePosition);
       const currentPoints = parseInt(milestoneElement.dataset.currentPoints);
       const isAchieved = milestoneElement.dataset.isAchieved === 'true';
       
       // Update modal content
-      document.getElementById('modalIcon').textContent = rewardIcon;
-      document.getElementById('modalTitle').textContent = rewardTitle;
-      document.getElementById('modalPoints').textContent = rewardPoints + ' tšk';
+      document.getElementById('modalIcon').textContent = milestoneIcon;
+      document.getElementById('modalTitle').textContent = milestoneName;
+      document.getElementById('modalPoints').textContent = milestonePoints + ' tšk';
       
       // Determine status
       const statusEl = document.getElementById('modalStatus');
-      const pointsNeeded = rewardPoints - currentPoints;
+      const pointsNeeded = milestonePoints - currentPoints;
       
       if (isAchieved) {
         statusEl.className = 'modal-status achieved';
-        statusEl.innerHTML = '🎉 <strong>Pasiekta!</strong><br>Tu jau pasiekei šį etapą!';
-      } else if (currentPoints >= rewardPoints) {
+        statusEl.innerHTML = '🎉 <strong>Pasiekta!</strong><br>Tu jau pasiekei šį ženkliuką!';
+      } else if (currentPoints >= milestonePoints) {
         statusEl.className = 'modal-status unlocked';
-        statusEl.innerHTML = '✅ <strong>Gali prašyti!</strong><br>Turi pakankamai taškų!';
+        statusEl.innerHTML = '✅ <strong>Beveik ten!</strong><br>Dar keletas taškų!';
       } else {
         statusEl.className = 'modal-status locked';
-        statusEl.innerHTML = '🔒 <strong>Dar reikia ' + pointsNeeded + ' tšk!</strong><br>Dirbi gerai, tęsk!';
+        statusEl.innerHTML = '🔒 <strong>Dar reikia ' + Math.abs(pointsNeeded) + ' tšk!</strong><br>Dirbi gerai, tęsk!';
         
         // Shake animation for locked milestones
         milestoneElement.classList.add('milestone-locked');
@@ -2291,14 +2290,14 @@
       document.getElementById('rewardModal').style.display = 'flex';
     }
     
-    function closeRewardModal() {
+    function closeMilestoneModal() {
       document.getElementById('rewardModal').style.display = 'none';
     }
     
     // Close modal on Escape key
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') {
-        closeRewardModal();
+        closeMilestoneModal();
       }
     });
 
