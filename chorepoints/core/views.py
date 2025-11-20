@@ -248,21 +248,25 @@ def upload_avatar(request):
     if request.method == "POST":
         form = AvatarUploadForm(request.POST, request.FILES, instance=kid)
         if form.is_valid():
+            # Don't save yet - we need to handle clearing opposite field
+            updated_kid = form.save(commit=False)
+            
             # Clear opposite field if one is being set
             avatar_emoji = form.cleaned_data.get('avatar_emoji')
             photo = form.cleaned_data.get('photo')
             
             # If photo is uploaded, clear emoji
             if photo:
-                kid.avatar_emoji = ""
-            # If emoji is set, clear photo
+                updated_kid.avatar_emoji = ""
+            # If emoji is set, clear photo  
             elif avatar_emoji:
-                if kid.photo:
+                if updated_kid.photo:
                     # Delete old photo from storage
-                    kid.photo.delete(save=False)
-                kid.photo = None
+                    updated_kid.photo.delete(save=False)
+                updated_kid.photo = None
             
-            form.save()
+            # Now save with changes
+            updated_kid.save()
             messages.success(request, "Avataras sėkmingai atnaujintas! 🎉")
             return redirect("kid_home")
     else:
