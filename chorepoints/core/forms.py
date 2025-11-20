@@ -51,7 +51,7 @@ class AvatarUploadForm(forms.ModelForm):
             'avatar_emoji': 'Arba pasirink emoji'
         }
         help_texts = {
-            'photo': 'Maksimalus dydis: 5MB. Palaikomi formatai: JPG, JPEG, PNG, GIF',
+            'photo': 'Maksimalus dydis: 5MB. Palaikomi formatai: JPG, JPEG, PNG, GIF, HEIC, MPO',
             'avatar_emoji': 'Įvesk emoji simbolį (pvz., 😀 🎮 🚀)'
         }
     
@@ -63,21 +63,27 @@ class AvatarUploadForm(forms.ModelForm):
                 raise forms.ValidationError("Nuotrauka per didelė! Maksimalus dydis: 5MB")
             
             # Validate file type by MIME type
-            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+            # Support all common photo formats from iPhone and other devices
+            allowed_types = [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+                'image/heic', 'image/heif',  # iPhone HEIC format
+                'image/mpo',  # iPhone MPO format (burst/depth photos)
+                'image/webp',  # Modern web format
+            ]
             if hasattr(photo, 'content_type') and photo.content_type:
                 if photo.content_type not in allowed_types:
                     raise forms.ValidationError(
-                        f"Netinkamas failas! Leistini formatai: JPG, JPEG, PNG, GIF. "
+                        f"Netinkamas failas! Leistini formatai: JPG, JPEG, PNG, GIF, HEIC, MPO, WEBP. "
                         f"Gautas: {photo.content_type}"
                     )
             else:
                 # Fallback: check file extension if content_type is missing
                 import os
                 ext = os.path.splitext(photo.name)[1].lower()
-                allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+                allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.heic', '.heif', '.mpo', '.webp']
                 if ext not in allowed_extensions:
                     raise forms.ValidationError(
-                        f"Netinkamas failo plėtinys! Leistini: .jpg, .jpeg, .png, .gif. "
+                        f"Netinkamas failo plėtinys! Leistini: .jpg, .jpeg, .png, .gif, .heic, .mpo, .webp. "
                         f"Gautas: {ext}"
                     )
         
