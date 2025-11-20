@@ -20,8 +20,8 @@ class EmojiDatalistTextInput(forms.TextInput):
     def __init__(self, emoji_choices=None, *args, **kwargs):
         self.emoji_choices = emoji_choices or []
         attrs = kwargs.setdefault("attrs", {})
-        attrs.setdefault("placeholder", "Pasirink arba įvesk emoji")
-        attrs.setdefault("style", "width: 10ch; font-size: 1.2rem;")
+        attrs.setdefault("placeholder", "Emoji")
+        attrs.setdefault("style", "width: 4ch; font-size: 1.5rem; text-align: center; padding: 4px;")
         super().__init__(*args, **kwargs)
 
     def render(self, name, value, attrs=None, renderer=None):
@@ -55,33 +55,43 @@ class EmojiDatalistTextInput(forms.TextInput):
 .emoji-grid {{
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-  max-width: 420px;
+  gap: 4px;
+  margin-top: 12px;
+  max-width: 380px;
+  padding: 8px;
+  background: rgba(0,0,0,0.02);
+  border-radius: 8px;
+  border: 1px solid rgba(0,0,0,0.08);
 }}
 .emoji-choice {{
-  border: 1px solid transparent;
-  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(0,0,0,0.08);
+  background: white;
   color: inherit;
-  width: 38px;
-  height: 38px;
+  width: 36px;
+  height: 36px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  font-size: 1.2rem;
+  border-radius: 6px;
+  font-size: 1.3rem;
   cursor: pointer;
-  transition: background 120ms ease, border-color 120ms ease, transform 120ms ease;
+  transition: all 100ms ease;
 }}
-.emoji-choice:hover,
-.emoji-choice:focus {{
-  border-color: rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.08);
+.emoji-choice:hover {{
+  border-color: rgba(0,0,0,0.2);
+  background: rgba(96,165,250,0.1);
+  transform: scale(1.08);
   outline: none;
+}}
+.emoji-choice:focus {{
+  border-color: #60a5fa;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(96,165,250,0.2);
 }}
 .emoji-choice.active {{
   border-color: #60a5fa;
-  box-shadow: 0 0 0 2px rgba(96,165,250,0.35);
+  background: rgba(96,165,250,0.15);
+  box-shadow: 0 0 0 2px rgba(96,165,250,0.3);
 }}
 </style>
 <script>
