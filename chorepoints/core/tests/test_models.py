@@ -135,11 +135,11 @@ class KidModelTests(TestCase):
         """Avatar progress should stay on the last achieved milestone."""
         self.kid.map_position = 75  # Only first milestone reached (50)
         progress = self.kid.get_map_progress()
-        self.assertEqual(progress['progress_percentage'], 10)
+        self.assertEqual(progress['progress_percentage'], 0)  # 0% = at first milestone (index 0)
         
         self.kid.map_position = 280  # Up to 200 milestone, not yet 300
         progress = self.kid.get_map_progress()
-        self.assertEqual(progress['progress_percentage'], 30)
+        self.assertEqual(progress['progress_percentage'], 22)  # 22% = at third milestone (index 2/9 = 22%)
     
     def test_map_progress_marks_completion_at_last_milestone(self):
         """Progress should report completion after the final milestone."""
