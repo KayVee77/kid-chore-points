@@ -1,11 +1,14 @@
 name: Deploy ChorePoints
 
 on:
-   push:
-      branches: ["**"]  # Trigger on ALL branches for testing
+   workflow_dispatch:
+      inputs:
+         reason:
+            description: 'Deployment reason (e.g., "Fix milestone bug", "Add new feature")'
+            required: false
+            default: 'Manual deployment'
    pull_request:
       branches: ["main"]
-   workflow_dispatch:
 
 env:
    PYTHON_VERSION: "3.11"

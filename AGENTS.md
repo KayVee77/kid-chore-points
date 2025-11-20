@@ -369,15 +369,71 @@ az webapp config appsettings set \
 
 ## 🚀 Deployment Steps (for Agents to Prepare PRs)
 
-### GitHub Actions CI/CD (Automatic on `main` push)
+### GitHub Actions CI/CD (Manual Trigger Only - 2025-11-20 Update)
 **Workflow**: `.github/workflows/deploy.yml`
 
-**Triggers**:
-- Push to **ANY branch** (allows testing deployments on feature branches)
-- Pull request to `main` (runs tests only, no deployment)
-- Manual workflow_dispatch (via GitHub UI)
+**CRITICAL CHANGE**: Deployment is now **MANUAL ONLY** to reduce unnecessary pipeline runs.
 
-**Steps**:
+**Triggers**:
+- ✅ **Manual workflow_dispatch** (via GitHub CLI or UI)
+- ✅ **Pull request to main** (runs tests only, no deployment)
+- ❌ **NO automatic push triggers** (prevents pipeline spam on every commit)
+
+**Agent Deployment Protocol** (MANDATORY):
+
+1. **Complete all code changes** on feature branch
+2. **Test locally** with `dev.ps1` and verify all features work
+3. **Run unit tests** locally: `python manage.py test core`
+4. **Commit and push** feature branch to remote
+5. **Create PR** with comprehensive description
+6. **Manually trigger deployment** on feature branch:
+   ```bash
+   gh workflow run "Deploy ChorePoints" --ref <branch-name>
+   ```
+7. **Monitor deployment** - DO NOT FINISH TASK until workflow succeeds:
+   ```bash
+   # Get latest run status
+   gh run list --branch <branch-name> --limit 1
+   
+   # Watch run in real-time (get run ID from above)
+   gh run watch <run-id>
+   
+   # View logs if failed
+   gh run view <run-id> --log-failed
+   ```
+8. **If deployment fails**:
+   - Read error logs from GitHub Actions
+   - Fix the issue in your branch
+   - Commit the fix
+   - Trigger workflow again (step 6)
+   - Repeat until deployment succeeds
+9. **Verify production deployment** after success:
+   ```bash
+   # Check app health
+   curl -I https://elija-agota.azurewebsites.net/
+   
+   # Use Playwright MCP to test UI
+   # Open: https://elija-agota.azurewebsites.net/kid/login/
+   # Login as Elija (PIN: 1234)
+   # Verify new features work correctly
+   ```
+10. **Only after verification**: Notify user that PR is ready for review
+
+**What agents MUST do**:
+- ✅ Manually trigger workflow after pushing changes
+- ✅ Wait for workflow to complete successfully
+- ✅ Fix any deployment failures before finishing task
+- ✅ Verify production app is healthy after deployment
+- ✅ Use Playwright MCP (#microsoft/playwright-mcp) to test features in production
+
+**What agents should NOT do**:
+- ❌ Finish task with failing deployment
+- ❌ Skip deployment verification step
+- ❌ Merge PR automatically (user must review and approve)
+- ❌ Push directly to `main` branch
+- ❌ Modify `.github/workflows/deploy.yml` without user approval
+
+**Deployment Steps**:
 1. Checkout source code
 2. Setup Python 3.11
 3. Install dependencies (`pip install -r requirements.txt`)
@@ -397,21 +453,23 @@ az webapp config appsettings set \
 - Runs `startup.sh`: installs deps → collectstatic → migrate → gunicorn
 - Total deployment time: ~2-3 minutes
 
-**Important**: Workflow now triggers on ALL branches (`branches: ["**"]`) to enable deployment testing before merging to main
+**Manual Trigger Examples**:
+```bash
+# Trigger from current branch
+gh workflow run "Deploy ChorePoints"
 
-**What agents should do**:
-1. Create feature branch and make changes
-2. Test locally with `dev.ps1`
-3. Push feature branch to remote
-4. Create PR (DO NOT MERGE)
-5. Instruct user: "Please review PR and merge to main when ready. GitHub Actions will auto-deploy to Azure."
+# Trigger specific branch
+gh workflow run "Deploy ChorePoints" --ref fix/milestone-bug
 
-**What agents should NOT do**:
-- ❌ Merge PR automatically (user must review and approve)
-- ❌ Push directly to `main` branch
-- ❌ Modify `.github/workflows/deploy.yml` without user approval (deployment is WORKING, don't break it)
-- ❌ Run `az webapp ssh` commands automatically (always ask user to run manually)
-- ❌ Use manual Kudu API curl commands (use official `azure/webapps-deploy@v3` action instead)
+# Trigger with deployment reason
+gh workflow run "Deploy ChorePoints" --ref fix/milestone-bug -f reason="Fix milestone avatar positioning"
+
+# Check if workflow started
+gh run list --branch fix/milestone-bug --limit 3
+
+# Watch deployment progress
+gh run watch <run-id>
+```
 
 ### Azure startup.sh (Runs on Container Startup)
 **Script**: `chorepoints/startup.sh`
@@ -728,7 +786,9 @@ class Migration(migrations.Migration):
 
 **Recent Deployment Fixes (2025-11-20)**:
 - ✅ Fixed 401 Unauthorized errors by switching from manual Kudu API curl to `azure/webapps-deploy@v3`
-- ✅ Enabled workflow on all branches for testing (`branches: ["**"]`)
+- ✅ Changed to **manual-only deployment triggers** to prevent pipeline spam
+- ✅ Agents MUST manually trigger workflow and wait for success before finishing tasks
+- ✅ Added production verification requirement using Playwright MCP
 - ✅ Deployment now works reliably - DO NOT revert these changes
 
 ## 📚 References
