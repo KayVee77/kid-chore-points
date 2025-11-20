@@ -238,6 +238,13 @@ def upload_avatar(request):
     if not kid:
         return redirect("kid_login")
     
+    # Popular emoji options for kids
+    popular_emojis = [
+        "😀", "😎", "🤩", "🥳", "😺", "🐶", "🦄", "🦖", "🐙", "🦊",
+        "🐼", "🦁", "🐯", "🐸", "🦉", "🐝", "🦋", "🌟", "⭐", "🌈",
+        "🎮", "🎯", "🎨", "🎪", "🚀", "🏆", "👑", "💎", "🔥", "⚡"
+    ]
+    
     if request.method == "POST":
         form = AvatarUploadForm(request.POST, request.FILES, instance=kid)
         if form.is_valid():
@@ -261,5 +268,9 @@ def upload_avatar(request):
     else:
         form = AvatarUploadForm(instance=kid)
     
-    return render(request, "kid/upload_avatar.html", {"form": form, "kid": kid})
+    return render(request, "kid/upload_avatar.html", {
+        "form": form,
+        "kid": kid,
+        "popular_emojis": popular_emojis
+    })
 
