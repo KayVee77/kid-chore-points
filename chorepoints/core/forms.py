@@ -51,7 +51,7 @@ class AvatarUploadForm(forms.ModelForm):
             'avatar_emoji': 'Arba pasirink emoji'
         }
         help_texts = {
-            'photo': 'Maksimalus dydis: 5MB. Palaikomi formatai: JPG, PNG, GIF',
+            'photo': 'Maksimalus dydis: 5MB. Palaikomi formatai: JPG, JPEG, PNG, GIF',
             'avatar_emoji': 'Įvesk emoji simbolį (pvz., 😀 🎮 🚀)'
         }
     
@@ -62,10 +62,24 @@ class AvatarUploadForm(forms.ModelForm):
             if photo.size > 5 * 1024 * 1024:
                 raise forms.ValidationError("Nuotrauka per didelė! Maksimalus dydis: 5MB")
             
-            # Validate file type
-            allowed_types = ['image/jpeg', 'image/png', 'image/gif']
-            if hasattr(photo, 'content_type') and photo.content_type not in allowed_types:
-                raise forms.ValidationError("Netinkamas failas! Leistini formatai: JPG, PNG, GIF")
+            # Validate file type by MIME type
+            allowed_types = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+            if hasattr(photo, 'content_type') and photo.content_type:
+                if photo.content_type not in allowed_types:
+                    raise forms.ValidationError(
+                        f"Netinkamas failas! Leistini formatai: JPG, JPEG, PNG, GIF. "
+                        f"Gautas: {photo.content_type}"
+                    )
+            else:
+                # Fallback: check file extension if content_type is missing
+                import os
+                ext = os.path.splitext(photo.name)[1].lower()
+                allowed_extensions = ['.jpg', '.jpeg', '.png', '.gif']
+                if ext not in allowed_extensions:
+                    raise forms.ValidationError(
+                        f"Netinkamas failo plėtinys! Leistini: .jpg, .jpeg, .png, .gif. "
+                        f"Gautas: {ext}"
+                    )
         
         return photo
     
