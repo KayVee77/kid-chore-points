@@ -162,6 +162,30 @@ class KidHomeViewTests(TestCase):
         response = self.client.get(reverse('kid_home'))
         self.assertContains(response, 'Test Reward')
         self.assertContains(response, '20')  # Reward cost
+    
+    def test_rewards_banner_hidden_until_all_milestones_done(self):
+        """Completion banner should not show before final milestone."""
+        session = self.client.session
+        session['kid_id'] = self.kid.id
+        session.save()
+        self.kid.map_position = 100
+        self.kid.save(update_fields=['map_position'])
+        
+        response = self.client.get(reverse('kid_home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, "Pasiekei visus apdovanojimus!")
+    
+    def test_rewards_banner_shows_after_final_milestone(self):
+        """Completion banner should appear once all milestones are reached."""
+        session = self.client.session
+        session['kid_id'] = self.kid.id
+        session.save()
+        self.kid.map_position = 3000
+        self.kid.save(update_fields=['map_position'])
+        
+        response = self.client.get(reverse('kid_home'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Pasiekei visus apdovanojimus!")
 
 
 class ChoreSubmissionViewTests(TestCase):

@@ -53,6 +53,39 @@ class KidModelTests(TestCase):
         """Test PIN is stored as plaintext (MVP limitation)."""
         self.assertEqual(self.kid.pin, '1234')
         # Note: In production, this should be hashed
+    
+    def test_kid_greeting_respects_gender(self):
+        """Kid greeting should match gender or fall back to neutral."""
+        self.kid.gender = Kid.Gender.MALE
+        self.assertEqual(self.kid.get_greeting(), f"Sveikas, {self.kid.name}!")
+        
+        self.kid.gender = Kid.Gender.FEMALE
+        self.assertEqual(self.kid.get_greeting(), f"Sveika, {self.kid.name}!")
+        
+        self.kid.gender = Kid.Gender.OTHER
+        self.assertEqual(self.kid.get_greeting(), f"Labas, {self.kid.name}!")
+    
+    def test_map_progress_uses_last_reached_milestone(self):
+        """Avatar progress should stay on the last achieved milestone."""
+        self.kid.map_position = 75  # Only first milestone reached (50)
+        progress = self.kid.get_map_progress()
+        self.assertEqual(progress['progress_percentage'], 10)
+        
+        self.kid.map_position = 280  # Up to 200 milestone, not yet 300
+        progress = self.kid.get_map_progress()
+        self.assertEqual(progress['progress_percentage'], 30)
+    
+    def test_map_progress_marks_completion_at_last_milestone(self):
+        """Progress should report completion after the final milestone."""
+        self.kid.map_position = 0
+        progress = self.kid.get_map_progress()
+        self.assertFalse(progress['completed_all_milestones'])
+        self.assertEqual(progress['progress_percentage'], 0)
+        
+        self.kid.map_position = 3200  # Beyond final milestone
+        progress = self.kid.get_map_progress()
+        self.assertTrue(progress['completed_all_milestones'])
+        self.assertEqual(progress['progress_percentage'], 100)
 
 
 class ChoreModelTests(TestCase):
