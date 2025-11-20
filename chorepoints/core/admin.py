@@ -9,13 +9,13 @@ admin.site.index_title = "Valdymo skydelis"
 
 @admin.register(Kid)
 class KidAdmin(admin.ModelAdmin):
-    list_display = ("name", "parent", "points_balance", "map_position", "map_theme", "active", "created_at")
-    list_filter = ("active", "parent", "map_theme")
+    list_display = ("name", "gender", "parent", "points_balance", "map_position", "map_theme", "active", "created_at")
+    list_filter = ("active", "parent", "map_theme", "gender")
     search_fields = ("name", "parent__username")
     actions = ["reset_map_position"]
     fieldsets = (
         ("Pagrindinė informacija", {
-            'fields': ('parent', 'name', 'pin', 'active')
+            'fields': ('parent', 'name', 'gender', 'pin', 'active')
         }),
         ("Taškai ir žemėlapis", {
             'fields': ('points_balance', 'map_position', 'highest_milestone', 'map_theme')
