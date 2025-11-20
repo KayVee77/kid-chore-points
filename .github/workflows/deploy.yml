@@ -62,7 +62,7 @@ jobs:
               CREDS=$(az webapp deployment list-publishing-profiles \
                 --name elija-agota \
                 --resource-group chorepoints-rg-us \
-                --query "[?publishMethod=='MSDeploy']|[0].{user:userName,pass:userPWD}" \
+                --query "[?publishMethod=='ZipDeploy']|[0].{user:userName,pass:userPWD}" \
                 -o json)
               
               USERNAME=$(echo $CREDS | jq -r '.user')
