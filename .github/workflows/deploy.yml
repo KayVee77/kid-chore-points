@@ -59,11 +59,23 @@ jobs:
          - name: Deploy to Azure Web App
            uses: azure/webapps-deploy@v3
            with:
-              app-name: ${{ vars.AZURE_WEBAPP_NAME }}
+              app-name: elija-agota
               package: ./chorepoints.zip
               clean: true
               slot-name: Production
               startup-command: "bash startup.sh"
+
+         - name: Verify deployment
+           run: |
+              echo "Waiting 30 seconds for deployment to complete..."
+              sleep 30
+              echo "Checking health endpoint..."
+              curl -f https://elija-agota.azurewebsites.net/kid/health-check/ || echo "Health check failed"
+
+         - name: Restart Azure Web App
+           run: |
+              echo "Restarting web app to ensure new code is loaded..."
+              az webapp restart --name elija-agota --resource-group chorepoints-rg-us
 
          - name: Logout
            if: always()

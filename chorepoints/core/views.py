@@ -2,13 +2,25 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
+from django.http import JsonResponse
 from .forms import KidLoginForm, ChangePinForm
 from .models import Kid, Chore, Reward, ChoreLog, Redemption
 from django.utils import timezone
 import json
+import datetime
 
 def index(request):
     return render(request, "index.html")
+
+def health_check(request):
+    """Health check endpoint to verify deployment updates."""
+    return JsonResponse({
+        "status": "ok",
+        "app": "ChorePoints",
+        "version": "2025.11.20-deployment-test",
+        "timestamp": datetime.datetime.now().isoformat(),
+        "message": "Deployment verification endpoint - version updated via GitHub Actions"
+    })
 
 @require_http_methods(["GET", "POST"])
 def kid_login(request):
