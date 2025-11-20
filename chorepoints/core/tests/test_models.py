@@ -49,6 +49,72 @@ class KidModelTests(TestCase):
         )
         self.assertEqual(new_kid.points_balance, 0)
     
+    def test_milestone_avatar_positioning(self):
+        """Test avatar positioning at correct milestone tier (bug fix verification)."""
+        # Test case: kid has 409 points (between 300 and 500 milestones)
+        self.kid.map_position = 409
+        self.kid.save()
+        
+        # Avatar should be at milestone index 3 (300 tšk milestone, 0-indexed)
+        # Milestones: 50, 100, 200, 300, 500, 750, 1000, 1500, 2000, 3000
+        current_index = self.kid.get_current_milestone_index()
+        self.assertEqual(current_index, 3, "Avatar should be at index 3 (300 tšk milestone)")
+        
+        # Progress percentage should place avatar at 33% (3rd out of 9 gaps = 3/9 = 33%)
+        progress = self.kid.get_avatar_progress_percentage()
+        self.assertEqual(progress, 33, "Avatar should be at 33% (milestone 3 of 9)")
+        
+        # Current milestone should be 300 tšk
+        current_milestone = self.kid.get_current_milestone()
+        self.assertIsNotNone(current_milestone)
+        self.assertEqual(current_milestone['position'], 300)
+        self.assertEqual(current_milestone['name'], 'Deimanto ženkliukas')
+        
+        # Next milestone should be 500 tšk
+        next_milestone = self.kid.get_next_milestone()
+        self.assertIsNotNone(next_milestone)
+        self.assertEqual(next_milestone['position'], 500)
+        self.assertEqual(next_milestone['name'], 'Karūnos ženkliukas')
+        
+        # Map progress should reflect correct current milestone index
+        map_data = self.kid.get_map_progress()
+        self.assertEqual(map_data['current_milestone_index'], 3)
+        self.assertEqual(map_data['points_needed'], 91)  # 500 - 409
+    
+    def test_milestone_positioning_edge_cases(self):
+        """Test avatar positioning at milestone boundaries and extremes."""
+        # Test 0 points (no milestones achieved)
+        self.kid.map_position = 0
+        self.assertEqual(self.kid.get_current_milestone_index(), -1)
+        self.assertEqual(self.kid.get_avatar_progress_percentage(), 0)
+        self.assertIsNone(self.kid.get_current_milestone())
+        
+        # Test exactly at first milestone (50 tšk)
+        self.kid.map_position = 50
+        self.assertEqual(self.kid.get_current_milestone_index(), 0)
+        self.assertEqual(self.kid.get_avatar_progress_percentage(), 0)
+        current = self.kid.get_current_milestone()
+        self.assertEqual(current['position'], 50)
+        
+        # Test between first and second milestone (75 tšk)
+        self.kid.map_position = 75
+        self.assertEqual(self.kid.get_current_milestone_index(), 0)
+        self.assertEqual(self.kid.get_avatar_progress_percentage(), 0)
+        
+        # Test exactly at last milestone (3000 tšk)
+        self.kid.map_position = 3000
+        self.assertEqual(self.kid.get_current_milestone_index(), 9)
+        self.assertEqual(self.kid.get_avatar_progress_percentage(), 100)
+        current = self.kid.get_current_milestone()
+        self.assertEqual(current['position'], 3000)
+        
+        # Test beyond all milestones (3500 tšk)
+        self.kid.map_position = 3500
+        self.assertEqual(self.kid.get_current_milestone_index(), 9)
+        self.assertEqual(self.kid.get_avatar_progress_percentage(), 100)
+        next_milestone = self.kid.get_next_milestone()
+        self.assertEqual(next_milestone['position'], 4000)  # Bonus interval at 4000
+    
     def test_kid_pin_storage(self):
         """Test PIN is stored as plaintext (MVP limitation)."""
         self.assertEqual(self.kid.pin, '1234')
