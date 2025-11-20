@@ -51,15 +51,20 @@ class Kid(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
         # After initial save ensure photo (if any) is resized (max 400x400)
+        # Only resize if using local filesystem storage (not Azure Blob Storage)
         if self.photo and Image:
-            photo_path = Path(self.photo.path)
             try:
-                with Image.open(photo_path) as img:
-                    if img.width > 400 or img.height > 400:
-                        img.thumbnail((400, 400))
-                        img.save(photo_path)
-            except Exception:
-                # silently ignore processing errors (keep original)
+                # Azure Blob Storage doesn't support .path attribute
+                # Check if storage backend supports path before trying to resize
+                if hasattr(self.photo.storage, 'location'):
+                    photo_path = Path(self.photo.path)
+                    with Image.open(photo_path) as img:
+                        if img.width > 400 or img.height > 400:
+                            img.thumbnail((400, 400))
+                            img.save(photo_path)
+            except (NotImplementedError, AttributeError, Exception):
+                # Silently ignore processing errors for cloud storage
+                # Azure Blob Storage doesn't support local path access
                 pass
 
     @property
@@ -182,13 +187,16 @@ class Chore(models.Model):
         super().save(*args, **kwargs)
         if self.icon_image and Image:
             from PIL import Image as PilImage
-            path = Path(self.icon_image.path)
             try:
-                with PilImage.open(path) as img:
-                    if img.width > 128 or img.height > 128:
-                        img.thumbnail((128,128))
-                        img.save(path)
-            except Exception:
+                # Azure Blob Storage doesn't support .path attribute
+                if hasattr(self.icon_image.storage, 'location'):
+                    path = Path(self.icon_image.path)
+                    with PilImage.open(path) as img:
+                        if img.width > 128 or img.height > 128:
+                            img.thumbnail((128,128))
+                            img.save(path)
+            except (NotImplementedError, AttributeError, Exception):
+                # Silently ignore for cloud storage
                 pass
 
     @property
@@ -214,13 +222,16 @@ class Reward(models.Model):
         super().save(*args, **kwargs)
         if self.icon_image and Image:
             from PIL import Image as PilImage
-            path = Path(self.icon_image.path)
             try:
-                with PilImage.open(path) as img:
-                    if img.width > 128 or img.height > 128:
-                        img.thumbnail((128,128))
-                        img.save(path)
-            except Exception:
+                # Azure Blob Storage doesn't support .path attribute
+                if hasattr(self.icon_image.storage, 'location'):
+                    path = Path(self.icon_image.path)
+                    with PilImage.open(path) as img:
+                        if img.width > 128 or img.height > 128:
+                            img.thumbnail((128,128))
+                            img.save(path)
+            except (NotImplementedError, AttributeError, Exception):
+                # Silently ignore for cloud storage
                 pass
 
     @property
