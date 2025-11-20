@@ -59,11 +59,29 @@ jobs:
          - name: Get Publishing Credentials
            id: publish-creds
            run: |
-              CREDS=$(az webapp deployment list-publishing-profiles \
+              # Get all publishing profiles to debug
+              echo "Fetching publishing profiles..."
+              PROFILES=$(az webapp deployment list-publishing-profiles \
                 --name elija-agota \
                 --resource-group chorepoints-rg-us \
-                --query "[?publishMethod=='ZipDeploy']|[0].{user:userName,pass:userPWD}" \
                 -o json)
+              
+              echo "Available publish methods:"
+              echo "$PROFILES" | jq -r '.[].publishMethod'
+              
+              # Try ZipDeploy first (case-sensitive)
+              CREDS=$(echo "$PROFILES" | jq '[.[] | select(.publishMethod=="ZipDeploy")][0] | {user:.userName, pass:.userPWD}')
+              
+              # If not found, try case-insensitive or MSDeploy as fallback
+              if [ "$CREDS" == "null" ] || [ -z "$CREDS" ]; then
+                echo "ZipDeploy not found, trying alternative methods..."
+                CREDS=$(echo "$PROFILES" | jq '[.[] | select(.publishMethod | ascii_downcase == "zipdeploy")][0] | {user:.userName, pass:.userPWD}')
+              fi
+              
+              if [ "$CREDS" == "null" ] || [ -z "$CREDS" ]; then
+                echo "No ZipDeploy credentials found, using first available profile..."
+                CREDS=$(echo "$PROFILES" | jq '.[0] | {user:.userName, pass:.userPWD}')
+              fi
               
               USERNAME=$(echo $CREDS | jq -r '.user')
               PASSWORD=$(echo $CREDS | jq -r '.pass')
@@ -71,17 +89,39 @@ jobs:
               echo "::add-mask::$PASSWORD"
               echo "username=$USERNAME" >> $GITHUB_OUTPUT
               echo "password=$PASSWORD" >> $GITHUB_OUTPUT
+              
+              if [ -z "$USERNAME" ] || [ "$USERNAME" == "null" ]; then
+                echo "ERROR: Failed to extract credentials!"
+                exit 1
+              fi
 
          - name: Deploy via Kudu ZIP API
            run: |
               echo "Deploying to Azure via Kudu ZIP Deploy..."
-              curl -X POST \
+              echo "Username: ${{ steps.publish-creds.outputs.username }}"
+              echo "Endpoint: https://elija-agota.scm.azurewebsites.net/api/zipdeploy"
+              
+              RESPONSE=$(curl -X POST \
                 -u "${{ steps.publish-creds.outputs.username }}:${{ steps.publish-creds.outputs.password }}" \
                 --data-binary @"./chorepoints.zip" \
                 -H "Content-Type: application/zip" \
                 https://elija-agota.scm.azurewebsites.net/api/zipdeploy \
-                -w "\nHTTP Status: %{http_code}\n" \
-                --fail-with-body || (echo "Deployment failed!" && exit 1)
+                -w "\n###HTTP_STATUS:%{http_code}###\n" \
+                -s)
+              
+              echo "$RESPONSE"
+              
+              HTTP_CODE=$(echo "$RESPONSE" | grep -o "###HTTP_STATUS:[0-9]*###" | grep -o "[0-9]*")
+              echo "HTTP Status Code: $HTTP_CODE"
+              
+              if [ "$HTTP_CODE" != "200" ] && [ "$HTTP_CODE" != "202" ]; then
+                echo "❌ Deployment failed with status $HTTP_CODE"
+                echo "Response body:"
+                echo "$RESPONSE" | sed '/###HTTP_STATUS:/d'
+                exit 1
+              fi
+              
+              echo "✓ Deployment succeeded with status $HTTP_CODE"
 
          - name: Restart Azure Web App
            run: |
