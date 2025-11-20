@@ -86,6 +86,14 @@ class Kid(models.Model):
             else:
                 break
         return achieved
+    
+    def get_current_milestone_index(self) -> int:
+        """Get the index of the current (highest achieved) milestone. Returns -1 if none achieved."""
+        for i, milestone in enumerate(ACHIEVEMENT_MILESTONES):
+            if self.map_position < milestone['position']:
+                return i - 1
+        # If we've achieved all milestones
+        return len(ACHIEVEMENT_MILESTONES) - 1
 
     def get_next_milestone(self) -> dict:
         """Get the next milestone to achieve."""
@@ -105,27 +113,36 @@ class Kid(models.Model):
         return None
 
     def get_avatar_progress_percentage(self, position: int | None = None) -> int:
-        """Return map percentage based on the last achieved milestone (step-based)."""
+        """Return map percentage based on current milestone position (where avatar should be displayed)."""
         current_position = self.map_position if position is None else position
         total_milestones = len(ACHIEVEMENT_MILESTONES)
-        if total_milestones == 0 or current_position <= 0:
+        if total_milestones == 0:
             return 0
-
-        achieved_count = 0
-        for milestone in ACHIEVEMENT_MILESTONES:
+        
+        # Find which milestone tier the user is currently in
+        current_milestone_index = -1
+        for i, milestone in enumerate(ACHIEVEMENT_MILESTONES):
             if current_position >= milestone['position']:
-                achieved_count += 1
+                current_milestone_index = i
             else:
                 break
-
-        achieved_count = min(achieved_count, total_milestones)
-        if achieved_count == 0:
+        
+        # If no milestones achieved yet (before first milestone), return 0
+        if current_milestone_index == -1:
             return 0
-        return int((achieved_count / total_milestones) * 100)
+        
+        # If all milestones achieved, place at last milestone
+        if current_milestone_index == total_milestones - 1:
+            return 100
+        
+        # Calculate percentage based on milestone index position in the sequence
+        # Place avatar at the milestone marker position, not between milestones
+        return int((current_milestone_index / (total_milestones - 1)) * 100)
 
     def get_map_progress(self) -> dict:
         """Calculate adventure map progress based on achievement milestones."""
         current_milestone = self.get_current_milestone()
+        current_milestone_index = self.get_current_milestone_index()
         next_milestone = self.get_next_milestone()
         final_milestone_position = ACHIEVEMENT_MILESTONES[-1]['position'] if ACHIEVEMENT_MILESTONES else 0
         completed_all_milestones = bool(final_milestone_position and self.map_position >= final_milestone_position)
@@ -139,7 +156,7 @@ class Kid(models.Model):
         
         # Build milestone display list
         milestones = []
-        for milestone in ACHIEVEMENT_MILESTONES:
+        for i, milestone in enumerate(ACHIEVEMENT_MILESTONES):
             status = 'achieved' if self.map_position >= milestone['position'] else 'locked'
             aria_status = 'pasiekta' if status == 'achieved' else f"dar reikia {milestone['position'] - self.map_position} taškų"
             
@@ -149,12 +166,14 @@ class Kid(models.Model):
                 'icon': milestone['icon'],
                 'bonus': milestone['bonus'],
                 'status': status,
+                'index': i,  # Add index for template logic
                 'aria_label': f"{milestone['name']}, {milestone['position']} taškai, {aria_status}",
             })
         
         return {
             'current_position': self.map_position,
             'current_milestone': current_milestone,
+            'current_milestone_index': current_milestone_index,
             'next_milestone': next_milestone,
             'milestones': milestones,
             'progress_percentage': progress_percentage,
