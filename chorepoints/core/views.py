@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.urls import reverse
 from django.views.decorators.http import require_http_methods
 from django.http import JsonResponse
-from .forms import KidLoginForm, ChangePinForm
+from .forms import KidLoginForm, ChangePinForm, AvatarUploadForm
 from .models import Kid, Chore, Reward, ChoreLog, Redemption
 from django.utils import timezone
 import json
@@ -230,3 +230,51 @@ def change_pin(request):
         form = ChangePinForm()
     
     return render(request, "kid/change_pin.html", {"form": form, "kid": kid})
+
+@require_http_methods(["GET", "POST"])
+def upload_avatar(request):
+    """Allow kid to upload avatar photo or select emoji."""
+    kid = _get_kid(request)
+    if not kid:
+        return redirect("kid_login")
+    
+    # Popular emoji options for kids
+    popular_emojis = [
+        "😀", "😎", "🤩", "🥳", "😺", "🐶", "🦄", "🦖", "🐙", "🦊",
+        "🐼", "🦁", "🐯", "🐸", "🦉", "🐝", "🦋", "🌟", "⭐", "🌈",
+        "🎮", "🎯", "🎨", "🎪", "🚀", "🏆", "👑", "💎", "🔥", "⚡"
+    ]
+    
+    if request.method == "POST":
+        form = AvatarUploadForm(request.POST, request.FILES, instance=kid)
+        if form.is_valid():
+            # Don't save yet - we need to handle clearing opposite field
+            updated_kid = form.save(commit=False)
+            
+            # Clear opposite field if one is being set
+            avatar_emoji = form.cleaned_data.get('avatar_emoji')
+            photo = form.cleaned_data.get('photo')
+            
+            # If photo is uploaded, clear emoji
+            if photo:
+                updated_kid.avatar_emoji = ""
+            # If emoji is set, clear photo  
+            elif avatar_emoji:
+                if updated_kid.photo:
+                    # Delete old photo from storage
+                    updated_kid.photo.delete(save=False)
+                updated_kid.photo = None
+            
+            # Now save with changes
+            updated_kid.save()
+            messages.success(request, "Avataras sėkmingai atnaujintas! 🎉")
+            return redirect("kid_home")
+    else:
+        form = AvatarUploadForm(instance=kid)
+    
+    return render(request, "kid/upload_avatar.html", {
+        "form": form,
+        "kid": kid,
+        "popular_emojis": popular_emojis
+    })
+

@@ -33,9 +33,29 @@ DATABASES = {
 AZURE_ACCOUNT_NAME = os.environ.get('AZURE_ACCOUNT_NAME')
 AZURE_ACCOUNT_KEY = os.environ.get('AZURE_ACCOUNT_KEY')
 
-# Use custom storage backends to separate static and media containers
-STATICFILES_STORAGE = 'chorepoints.storage_backends.AzureStaticStorage'
-DEFAULT_FILE_STORAGE = 'chorepoints.storage_backends.AzureMediaStorage'
+# Django 4.2+ storage configuration (new format)
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.azure_storage.AzureStorage",
+        "OPTIONS": {
+            "account_name": AZURE_ACCOUNT_NAME,
+            "account_key": AZURE_ACCOUNT_KEY,
+            "azure_container": "media",
+            "overwrite_files": True,  # Allow overwriting files with same name
+            "expiration_secs": None,  # Public container, no expiration
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "storages.backends.azure_storage.AzureStorage",
+        "OPTIONS": {
+            "account_name": AZURE_ACCOUNT_NAME,
+            "account_key": AZURE_ACCOUNT_KEY,
+            "azure_container": "static",
+            "overwrite_files": True,
+            "expiration_secs": None,
+        },
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = f'https://{AZURE_ACCOUNT_NAME}.blob.core.windows.net/static/'

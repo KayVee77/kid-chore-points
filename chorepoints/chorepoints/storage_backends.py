@@ -12,6 +12,16 @@ class AzureMediaStorage(AzureStorage):
     account_key = os.environ.get('AZURE_ACCOUNT_KEY')
     azure_container = 'media'
     expiration_secs = None
+    overwrite_files = True  # Allow overwriting existing files
+    
+    def get_available_name(self, name, max_length=None):
+        """
+        Return the name as-is to allow overwriting.
+        By default, Django appends random strings to avoid conflicts.
+        """
+        if self.overwrite_files:
+            return name
+        return super().get_available_name(name, max_length)
 
 
 class AzureStaticStorage(AzureStorage):
@@ -20,3 +30,4 @@ class AzureStaticStorage(AzureStorage):
     account_key = os.environ.get('AZURE_ACCOUNT_KEY')
     azure_container = 'static'
     expiration_secs = None
+    overwrite_files = True
